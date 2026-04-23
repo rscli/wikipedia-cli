@@ -66,5 +66,8 @@ jobs:
       - name: "GitHub"
         run: ./target/release/wiki github
 
+      - name: "Cargo"
+        run: ./target/release/wiki cargo
+
       - name: "-g -l zh rust"
         run: ./target/release/wiki -g -l zh rust
