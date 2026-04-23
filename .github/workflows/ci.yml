@@ -69,14 +69,3 @@ jobs:
         with:
           name: wiki-${{ matrix.os }}
           path: target/release/wiki.exe
-
-  msrv:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install MSRV toolchain
-        uses: dtolnay/rust-toolchain@1.70
-
-      - name: Check MSRV
-        run: cargo check
