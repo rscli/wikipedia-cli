@@ -97,26 +97,7 @@ wiki -l zh-tw machine learning  # query in Traditional Chinese
 
 ## Language Detection
 
-Language is auto-detected by analyzing Unicode script ranges in the query:
-
-| Script | Language | Wikipedia |
-|--------|----------|-----------|
-| Latin | English | en.wikipedia.org |
-| CJK (simplified) | Chinese | zh.wikipedia.org (zh-cn) |
-| CJK (traditional) | Chinese | zh.wikipedia.org (zh-tw) |
-| Hiragana / Katakana | Japanese | ja.wikipedia.org |
-| Hangul | Korean | ko.wikipedia.org |
-| Arabic | Arabic | ar.wikipedia.org |
-| Cyrillic | Russian | ru.wikipedia.org |
-| Devanagari | Hindi | hi.wikipedia.org |
-| Thai | Thai | th.wikipedia.org |
-| Hebrew | Hebrew | he.wikipedia.org |
-| Greek | Greek | el.wikipedia.org |
-| Tamil | Tamil | ta.wikipedia.org |
-| Bengali | Bengali | bn.wikipedia.org |
-| Telugu | Telugu | te.wikipedia.org |
-| Turkish markers | Turkish | tr.wikipedia.org |
-| Vietnamese markers | Vietnamese | vi.wikipedia.org |
+Language is auto-detected from the query's Unicode script. Supports English, Chinese (Simplified/Traditional), Japanese, Korean, Arabic, Russian, Hindi, Thai, Hebrew, Greek, Tamil, Bengali, Telugu, Turkish, and Vietnamese. Use `-l` to override.
 
 ## Search Mode
 
