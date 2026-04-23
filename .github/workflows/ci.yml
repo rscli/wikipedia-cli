@@ -60,5 +60,8 @@ jobs:
       - name: "Query: Hebrew → בינה מלאכותית"
         run: ./target/release/wikipedia בינה מלאכותית
 
+      - name: "Query: Specific → Rust (programming language)"
+        run: ./target/release/wikipedia "Rust (programming language)"
+
       - name: "Query: Disambiguation → mercury"
         run: ./target/release/wikipedia mercury
