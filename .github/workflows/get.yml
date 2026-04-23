@@ -72,5 +72,8 @@ jobs:
       - name: "TikTok"
         run: ./target/release/wiki tiktok
 
+      - name: "CLI"
+        run: ./target/release/wiki cli
+
       - name: "-g -l zh rust"
         run: ./target/release/wiki -g -l zh rust
