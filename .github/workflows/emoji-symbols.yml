@@ -1,0 +1,76 @@
+name: Emoji & Symbols
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  emoji-symbols:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --release
+
+      - name: "🦀 → Crab"
+        run: ./target/release/wiki 🦀
+
+      - name: "🐍 → Snake"
+        run: ./target/release/wiki 🐍
+
+      - name: "☕ → Coffee"
+        run: ./target/release/wiki ☕
+
+      - name: "⚛ → Atom"
+        run: ./target/release/wiki ⚛
+
+      - name: "♟ → Chess Pawn"
+        run: ./target/release/wiki ♟
+
+      - name: "🌍 → Earth"
+        run: ./target/release/wiki 🌍
+
+      - name: "🔬 → Microscope"
+        run: ./target/release/wiki 🔬
+
+      - name: "🎵 → Musical Note"
+        run: ./target/release/wiki 🎵
+
+      - name: "🏀 → Basketball"
+        run: ./target/release/wiki 🏀
+
+      - name: "🧬 → DNA"
+        run: ./target/release/wiki 🧬
+
+      - name: "🌋 → Volcano"
+        run: ./target/release/wiki 🌋
+
+      - name: "∞ → Infinity"
+        run: ./target/release/wiki ∞
+
+      - name: "π → Pi"
+        run: ./target/release/wiki π
+
+      - name: "Ω → Omega"
+        run: ./target/release/wiki Ω
+
+      - name: "E=mc²"
+        run: ./target/release/wiki "E=mc²"
+
+      - name: "C++"
+        run: ./target/release/wiki "C++"

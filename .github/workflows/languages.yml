@@ -1,0 +1,76 @@
+name: Languages
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  languages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --release
+
+      - name: "English → rust"
+        run: ./target/release/wiki rust
+
+      - name: "Simplified Chinese → 大语言模型"
+        run: ./target/release/wiki 大语言模型
+
+      - name: "Traditional Chinese → 機器學習"
+        run: ./target/release/wiki 機器學習
+
+      - name: "Japanese → プログラミング言語"
+        run: ./target/release/wiki プログラミング言語
+
+      - name: "Korean → 인공지능"
+        run: ./target/release/wiki 인공지능
+
+      - name: "Arabic → الذكاء_الاصطناعي"
+        run: ./target/release/wiki الذكاء_الاصطناعي
+
+      - name: "Russian → Искусственный интеллект"
+        run: ./target/release/wiki Искусственный интеллект
+
+      - name: "Hindi → कृत्रिम_बुद्धिमत्ता"
+        run: ./target/release/wiki कृत्रिम_बुद्धिमत्ता
+
+      - name: "Thai → ปัญญาประดิษฐ์"
+        run: ./target/release/wiki ปัญญาประดิษฐ์
+
+      - name: "Greek → Τεχνητή νοημοσύνη"
+        run: ./target/release/wiki Τεχνητή νοημοσύνη
+
+      - name: "Hebrew → בינה מלאכותית"
+        run: ./target/release/wiki בינה מלאכותית
+
+      - name: "Tamil → செயற்கை நுண்ணறிவு"
+        run: ./target/release/wiki செயற்கை நுண்ணறிவு
+
+      - name: "Bengali → কৃত্রিম বুদ্ধিমত্তা"
+        run: ./target/release/wiki কৃত্রিম বুদ্ধিমত্তা
+
+      - name: "Telugu → కృత్రిమ మేధస్సు"
+        run: ./target/release/wiki కృత్రిమ మేధస్సు
+
+      - name: "Turkish → Yapay zekâ"
+        run: ./target/release/wiki "Yapay zekâ"
+
+      - name: "Vietnamese → Trí tuệ nhân tạo"
+        run: ./target/release/wiki "Trí tuệ nhân tạo"
