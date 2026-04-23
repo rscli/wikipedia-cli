@@ -189,6 +189,23 @@ fn print_footer(t: &Theme, start: Instant, lang: &str, title: &str) {
     let _ = writeln!(out, "{}", t.reset);
 }
 
+fn disambig_labels(lang: &str) -> (&'static str, &'static str) {
+    match lang {
+        "zh" => ("也可以指：", "是一个消歧义词条。您是否在找："),
+        "ja" => ("は以下を指す場合もあります：", "は曖昧さ回避です。もしかして："),
+        "ko" => ("은(는) 다음을 가리킬 수도 있습니다:", "은(는) 동음이의어입니다. 찾으시는 것은:"),
+        "ar" => ("قد تشير أيضًا إلى:", "صفحة توضيح. هل تقصد:"),
+        "ru" => ("может также означать:", "— страница значений. Возможно, вы имели в виду:"),
+        "hi" => ("यह भी हो सकता है:", "एक बहुविकल्पी पृष्ठ है। क्या आप ढूंढ रहे हैं:"),
+        "th" => ("อาจหมายถึง:", "เป็นหน้าแก้ความกำกวม คุณหมายถึง:"),
+        "he" => (":עשוי גם להתייחס ל", ":דף פירושונים. האם התכוונת ל"),
+        "el" => ("μπορεί επίσης να αναφέρεται σε:", "είναι σελίδα αποσαφήνισης. Εννοούσατε:"),
+        "vi" => ("cũng có thể là:", "là trang định hướng. Có phải bạn muốn tìm:"),
+        "tr" => ("ayrıca şu anlamlara gelebilir:", "bir anlam ayrımı sayfasıdır. Aradığınız:"),
+        _ => ("may also refer to:", "is ambiguous. Did you mean:"),
+    }
+}
+
 fn print_disambig(t: &Theme, header: &str, query: &str, suggestions: &[&str]) {
     let out = std::io::stdout();
     let mut out = out.lock();
@@ -240,7 +257,8 @@ async fn check_disambiguation_page(
     let suggestions = filter_disambiguation_lines(extract);
 
     if !suggestions.is_empty() {
-        print_disambig(t, "may also refer to:", query, &suggestions);
+        let (also, _) = disambig_labels(lang);
+        print_disambig(t, also, query, &suggestions);
     }
 }
 
@@ -293,7 +311,8 @@ async fn handle_disambiguation(
     }
 
     if !suggestions.is_empty() {
-        print_disambig(t, "is ambiguous. Did you mean:", title, &suggestions);
+        let (_, ambig) = disambig_labels(lang);
+        print_disambig(t, ambig, title, &suggestions);
     }
 }
 
