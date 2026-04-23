@@ -52,7 +52,7 @@ async fn main() {
                     std::process::exit(1);
                 }
             }
-            "-q" | "--query" => { i += 1; }
+            "-o" | "--open" => { i += 1; }
             "-s" | "--search" => { search_mode = true; i += 1; }
             "-j" | "--json" => { json_mode = true; i += 1; }
             "-h" | "--help" => {
@@ -457,7 +457,7 @@ USAGE:
     wiki [OPTIONS] <query>
 
 OPTIONS:
-    -q, --query        Query mode: fetch article summary (default)
+    -o, --open         Open article summary (default)
     -s, --search       Search mode: list top results instead of fetching article
     -j, --json         Output as JSON (for piping to jq, scripts, etc.)
     -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
@@ -465,8 +465,8 @@ OPTIONS:
     -V, --version      Print version information
 
 EXAMPLES:
-    wiki rust                    # fetch article (default)
-    wiki --query rust            # same as above, explicit
+    wiki rust                    # open article (default)
+    wiki --open rust             # same as above, explicit
     wiki --search rust           # list search results
     wiki --json rust             # article as JSON
     wiki --search --json rust    # search results as JSON
