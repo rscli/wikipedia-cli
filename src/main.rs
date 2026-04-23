@@ -25,15 +25,54 @@ async fn main() {
         }
     }
 
-    let query = args.iter().filter(|a| !a.starts_with('-')).cloned().collect::<Vec<_>>().join(" ");
+    let mut forced_lang: Option<String> = None;
+    let mut query_parts: Vec<String> = Vec::new();
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "-l" | "--lang" => {
+                if i + 1 < args.len() {
+                    forced_lang = Some(args[i + 1].clone());
+                    i += 2;
+                } else {
+                    eprintln!("Error: -l requires a language code (e.g. zh, ja, ko, en)");
+                    std::process::exit(1);
+                }
+            }
+            "-h" | "--help" => {
+                print_help();
+                return;
+            }
+            "-V" | "--version" => {
+                println!("wk {VERSION}");
+                return;
+            }
+            other => {
+                query_parts.push(other.to_string());
+                i += 1;
+            }
+        }
+    }
+
+    let query = query_parts.join(" ");
     if query.is_empty() {
         print_help();
         std::process::exit(1);
     }
 
-    let (lang, variant) = detect_language(&query);
+    let (detected_lang, detected_variant) = detect_language(&query);
+    let (lang, variant): (&str, Option<&str>) = if let Some(ref l) = forced_lang {
+        let variant = match l.as_str() {
+            "zh-cn" | "zh-hans" => Some("zh-cn"),
+            "zh-tw" | "zh-hant" => Some("zh-tw"),
+            _ => None,
+        };
+        if l.starts_with("zh") { ("zh", variant) } else { (l.as_str(), variant) }
+    } else {
+        (detected_lang, detected_variant)
+    };
 
-    eprintln!("[wk] detected language: {lang}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default());
+    eprintln!("[wk] language: {lang}{}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default(), if forced_lang.is_some() { " (manual)" } else { " (auto)" });
 
     let client = reqwest::Client::builder()
         .user_agent("wikipedia-cli/0.1.0")
@@ -237,13 +276,17 @@ fn print_help() {
     println!("USAGE:");
     println!("    wk <query>\n");
     println!("OPTIONS:");
-    println!("    -h, --help       Print help information");
-    println!("    -V, --version    Print version information\n");
+    println!("    -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)");
+    println!("    -h, --help         Print help information");
+    println!("    -V, --version      Print version information\n");
     println!("EXAMPLES:");
     println!("    wk rust");
     println!("    wk 大语言模型");
     println!("    wk プログラミング言語");
-    println!("    wk 인공지능\n");
+    println!("    wk 인공지능");
+    println!("    wk -l zh rust              # query 'rust' on Chinese Wikipedia");
+    println!("    wk -l ja programming       # query 'programming' on Japanese Wikipedia");
+    println!("    wk -l zh-tw machine learning  # query in Traditional Chinese\n");
     println!("SUPPORTED LANGUAGES:");
     println!("    Auto-detected by script: English, Chinese (Simplified/Traditional),");
     println!("    Japanese, Korean, Arabic, Russian, Hindi, Thai, Hebrew, Greek,");

@@ -95,3 +95,9 @@ jobs:
 
       - name: "Query: Special chars C++"
         run: ./target/release/wk "C++"
+
+      - name: "Query: -l zh rust (force Chinese)"
+        run: ./target/release/wk -l zh rust
+
+      - name: "Query: -l ja rust (force Japanese)"
+        run: ./target/release/wk -l ja rust

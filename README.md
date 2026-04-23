@@ -40,8 +40,9 @@ wk <query>
 ### Options
 
 ```
--h, --help       Print help information
--V, --version    Print version information
+-l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
+-h, --help         Print help information
+-V, --version      Print version information
 ```
 
 ### Examples
@@ -75,6 +76,11 @@ wk 🦀
 wk 🐍
 wk ∞
 wk "E=mc²"
+
+# Force language with -l
+wk -l zh rust              # query 'rust' on Chinese Wikipedia
+wk -l ja programming       # query on Japanese Wikipedia
+wk -l zh-tw machine learning  # query in Traditional Chinese
 ```
 
 ## Language Detection
