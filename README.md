@@ -41,6 +41,8 @@ wiki <query>
 
 ```
 -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
+-s, --search       Search mode: list top results instead of fetching article
+-j, --json         Output as JSON (for piping to jq, scripts, etc.)
 -h, --help         Print help information
 -V, --version      Print version information
 ```
@@ -81,6 +83,15 @@ wiki "E=mc²"
 wiki -l zh rust              # query 'rust' on Chinese Wikipedia
 wiki -l ja programming       # query on Japanese Wikipedia
 wiki -l zh-tw machine learning  # query in Traditional Chinese
+
+# Search mode
+wiki --search rust           # list top search results
+wiki -s programming          # short flag
+
+# JSON output
+wiki --json rust             # article as JSON
+wiki --search --json rust    # search results as JSON
+wiki -sj rust                # combine short flags
 ```
 
 ## Language Detection

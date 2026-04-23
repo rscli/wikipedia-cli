@@ -59,3 +59,26 @@ jobs:
 
       - name: "Long sentence (Japanese)"
         run: ./target/release/wiki "ニューラルネットワークの仕組み"
+
+      # --- Search mode ---
+      - name: "Search: rust"
+        run: ./target/release/wiki --search rust
+
+      - name: "Search: 人工智能"
+        run: ./target/release/wiki --search 人工智能
+
+      - name: "Search: programming language"
+        run: ./target/release/wiki -s "programming language"
+
+      # --- JSON mode ---
+      - name: "JSON: rust"
+        run: ./target/release/wiki --json rust
+
+      - name: "JSON: 大语言模型"
+        run: ./target/release/wiki --json 大语言模型
+
+      - name: "JSON + Search: rust"
+        run: ./target/release/wiki --search --json rust
+
+      - name: "JSON + Search: Linux"
+        run: ./target/release/wiki -s -j Linux
