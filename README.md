@@ -1,6 +1,6 @@
 # wikipedia-cli
 
-A command-line tool to query Wikipedia with automatic language detection.
+A command-line tool to query Wikipedia with automatic language detection and hacker-style terminal output.
 
 ```
 $ wiki rust
@@ -13,7 +13,7 @@ Rust is an iron oxide, a usually reddish-brown oxide formed by the reaction of i
 ════════════════════════════════════════
 "rust" may also refer to:
 
-  ▸ Rust (programming language), a general purpose programming language focused on performance and memory safety
+  ▸ Rust (programming language), a general purpose programming language
   ▸ Rust (video game), a video game developed by Facepunch Studios
   ▸ ...
 ```
@@ -53,29 +53,27 @@ wiki [OPTIONS] <query>
 ### Examples
 
 ```bash
-# English (default query mode)
+# Get article (default)
 wiki rust
 wiki --get rust              # same as above, explicit
 wiki "Rust (programming language)"
 wiki "C++"
 
-# Simplified Chinese
-wiki 大语言模型
+# Search mode
+wiki --search rust           # list top search results
+wiki -s "programming language"
 
-# Traditional Chinese
-wiki 機器學習
+# JSON output
+wiki --json rust             # article as JSON
+wiki --search --json rust    # search results as JSON
 
-# Japanese
-wiki プログラミング言語
-
-# Korean
-wiki 인공지능
-
-# Arabic
-wiki الذكاء_الاصطناعي
-
-# Russian
-wiki "Искусственный интеллект"
+# Multi-language (auto-detected)
+wiki 大语言模型              # Simplified Chinese
+wiki 機器學習                # Traditional Chinese
+wiki プログラミング言語       # Japanese
+wiki 인공지능                # Korean
+wiki "Искусственный интеллект"  # Russian
+wiki الذكاء_الاصطناعي        # Arabic
 
 # Emoji & Symbols
 wiki 🦀
@@ -87,15 +85,6 @@ wiki "E=mc²"
 wiki -l zh rust              # query 'rust' on Chinese Wikipedia
 wiki -l ja programming       # query on Japanese Wikipedia
 wiki -l zh-tw machine learning  # query in Traditional Chinese
-
-# Search mode
-wiki --search rust           # list top search results
-wiki -s programming          # short flag
-
-# JSON output
-wiki --json rust             # article as JSON
-wiki --search --json rust    # search results as JSON
-wiki -sj rust                # combine short flags
 ```
 
 ## Language Detection
@@ -167,7 +156,7 @@ $ wiki --search --json rust
 
 ## Disambiguation
 
-When a query is ambiguous, the tool shows the primary article followed by a list of alternative meanings:
+When a query is ambiguous, the tool shows the primary article followed by a list of alternative meanings. Disambiguation messages are localized to the query language.
 
 ```
 $ wiki mercury
@@ -184,6 +173,13 @@ Mercury is the first planet from the Sun and the smallest in the Solar System...
   ▸ Mercury (element), a chemical element
   ▸ Mercury (mythology), a Roman deity
 ```
+
+## Features
+
+- ANSI colored output with hacker-style box drawing (auto-disabled when piped)
+- Single API call for article fetch (search + extract merged via generator API)
+- Zero-dependency language detection via Unicode script analysis
+- Optimized release binary (LTO, strip, panic=abort, opt-level=z)
 
 ## License
 
