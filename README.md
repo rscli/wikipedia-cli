@@ -1,0 +1,123 @@
+# wikipedia
+
+A command-line tool to query Wikipedia with automatic language detection.
+
+```
+$ wikipedia rust
+--- Rust ---
+
+Rust is an iron oxide, a usually reddish-brown oxide formed by the reaction of iron and oxygen...
+
+========================================
+"rust" may also refer to:
+
+  - Rust (programming language), a general purpose programming language focused on performance and memory safety
+  - Rust (video game), a video game developed by Facepunch Studios
+  - ...
+```
+
+## Install
+
+```bash
+cargo install --git https://github.com/rustq/wikipedia-cli
+```
+
+Or build from source:
+
+```bash
+git clone https://github.com/rustq/wikipedia-cli.git
+cd wikipedia-cli
+cargo build --release
+# Binary at ./target/release/wikipedia
+```
+
+## Usage
+
+```
+wikipedia <query>
+```
+
+### Options
+
+```
+-h, --help       Print help information
+-V, --version    Print version information
+```
+
+### Examples
+
+```bash
+# English
+wikipedia rust
+wikipedia "Rust (programming language)"
+wikipedia "C++"
+
+# Simplified Chinese
+wikipedia 大语言模型
+
+# Traditional Chinese
+wikipedia 機器學習
+
+# Japanese
+wikipedia プログラミング言語
+
+# Korean
+wikipedia 인공지능
+
+# Arabic
+wikipedia الذكاء_الاصطناعي
+
+# Russian
+wikipedia "Искусственный интеллект"
+
+# Emoji & Symbols
+wikipedia 🦀
+wikipedia 🐍
+wikipedia ∞
+wikipedia "E=mc²"
+```
+
+## Language Detection
+
+Language is auto-detected by analyzing Unicode script ranges in the query:
+
+| Script | Language | Wikipedia |
+|--------|----------|-----------|
+| Latin | English | en.wikipedia.org |
+| CJK (simplified) | Chinese | zh.wikipedia.org (zh-cn) |
+| CJK (traditional) | Chinese | zh.wikipedia.org (zh-tw) |
+| Hiragana / Katakana | Japanese | ja.wikipedia.org |
+| Hangul | Korean | ko.wikipedia.org |
+| Arabic | Arabic | ar.wikipedia.org |
+| Cyrillic | Russian | ru.wikipedia.org |
+| Devanagari | Hindi | hi.wikipedia.org |
+| Thai | Thai | th.wikipedia.org |
+| Hebrew | Hebrew | he.wikipedia.org |
+| Greek | Greek | el.wikipedia.org |
+| Tamil | Tamil | ta.wikipedia.org |
+| Bengali | Bengali | bn.wikipedia.org |
+| Telugu | Telugu | te.wikipedia.org |
+| Turkish markers | Turkish | tr.wikipedia.org |
+| Vietnamese markers | Vietnamese | vi.wikipedia.org |
+
+## Disambiguation
+
+When a query is ambiguous, the tool shows the primary article followed by a list of alternative meanings:
+
+```
+$ wikipedia mercury
+--- Mercury (planet) ---
+
+Mercury is the first planet from the Sun and the smallest in the Solar System...
+
+========================================
+"Mercury" is ambiguous. Did you mean:
+
+  - Mercury (planet), the closest planet to the Sun
+  - Mercury (element), a chemical element
+  - Mercury (mythology), a Roman deity
+```
+
+## License
+
+MIT
