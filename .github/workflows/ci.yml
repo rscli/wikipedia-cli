@@ -110,3 +110,93 @@ jobs:
 
       - name: "Query: Long sentence (Japanese)"
         run: ./target/release/wiki "ニューラルネットワークの仕組み"
+
+      # --- Tamil, Bengali, Telugu, Turkish, Vietnamese ---
+      - name: "Query: Tamil → செயற்கை நுண்ணறிவு"
+        run: ./target/release/wiki செயற்கை நுண்ணறிவு
+
+      - name: "Query: Bengali → কৃত্রিম বুদ্ধিমত্তা"
+        run: ./target/release/wiki কৃত্রিম বুদ্ধিমত্তা
+
+      - name: "Query: Telugu → కృత్రిమ మేధస్సు"
+        run: ./target/release/wiki కృత్రిమ మేధస్సు
+
+      - name: "Query: Turkish → Yapay zekâ"
+        run: ./target/release/wiki "Yapay zekâ"
+
+      - name: "Query: Vietnamese → Trí tuệ nhân tạo"
+        run: ./target/release/wiki "Trí tuệ nhân tạo"
+
+      # --- More disambiguation ---
+      - name: "Query: Disambiguation → python"
+        run: ./target/release/wiki python
+
+      - name: "Query: Disambiguation → apple"
+        run: ./target/release/wiki apple
+
+      - name: "Query: Disambiguation → java"
+        run: ./target/release/wiki java
+
+      - name: "Query: Disambiguation → mars"
+        run: ./target/release/wiki mars
+
+      # --- More emojis ---
+      - name: "Query: Emoji 🌍 → Earth"
+        run: ./target/release/wiki 🌍
+
+      - name: "Query: Emoji 🔬 → Microscope"
+        run: ./target/release/wiki 🔬
+
+      - name: "Query: Emoji 🎵 → Musical Note"
+        run: ./target/release/wiki 🎵
+
+      - name: "Query: Emoji 🏀 → Basketball"
+        run: ./target/release/wiki 🏀
+
+      - name: "Query: Emoji 🧬 → DNA"
+        run: ./target/release/wiki 🧬
+
+      - name: "Query: Emoji 🌋 → Volcano"
+        run: ./target/release/wiki 🌋
+
+      # --- More forced language ---
+      - name: "Query: -l ko artificial intelligence (force Korean)"
+        run: ./target/release/wiki -l ko "artificial intelligence"
+
+      - name: "Query: -l ar computer (force Arabic)"
+        run: ./target/release/wiki -l ar computer
+
+      - name: "Query: -l ru mathematics (force Russian)"
+        run: ./target/release/wiki -l ru mathematics
+
+      - name: "Query: -l hi internet (force Hindi)"
+        run: ./target/release/wiki -l hi internet
+
+      - name: "Query: -l zh-tw rust (force Traditional Chinese)"
+        run: ./target/release/wiki -l zh-tw rust
+
+      # --- Flags ---
+      - name: "Flag: -h (help)"
+        run: ./target/release/wiki -h
+
+      - name: "Flag: -V (version)"
+        run: ./target/release/wiki -V
+
+      # --- Famous topics ---
+      - name: "Query: Albert Einstein"
+        run: ./target/release/wiki "Albert Einstein"
+
+      - name: "Query: Linux"
+        run: ./target/release/wiki Linux
+
+      - name: "Query: Tokyo"
+        run: ./target/release/wiki Tokyo
+
+      - name: "Query: DNA"
+        run: ./target/release/wiki DNA
+
+      - name: "Query: Quantum computing"
+        run: ./target/release/wiki "quantum computing"
+
+      - name: "Query: Black hole"
+        run: ./target/release/wiki "black hole"
