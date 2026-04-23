@@ -52,6 +52,7 @@ async fn main() {
                     std::process::exit(1);
                 }
             }
+            "-q" | "--query" => { i += 1; }
             "-s" | "--search" => { search_mode = true; i += 1; }
             "-j" | "--json" => { json_mode = true; i += 1; }
             "-h" | "--help" => {
@@ -456,21 +457,21 @@ USAGE:
     wiki [OPTIONS] <query>
 
 OPTIONS:
-    -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
+    -q, --query        Query mode: fetch article summary (default)
     -s, --search       Search mode: list top results instead of fetching article
     -j, --json         Output as JSON (for piping to jq, scripts, etc.)
+    -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
     -h, --help         Print help information
     -V, --version      Print version information
 
 EXAMPLES:
-    wiki rust
-    wiki 大语言模型
+    wiki rust                    # fetch article (default)
+    wiki --query rust            # same as above, explicit
     wiki --search rust           # list search results
-    wiki --json rust             # JSON output
+    wiki --json rust             # article as JSON
     wiki --search --json rust    # search results as JSON
     wiki -l zh rust              # query 'rust' on Chinese Wikipedia
     wiki -l ja programming       # query 'programming' on Japanese Wikipedia
-    wiki -l zh-tw machine learning  # query in Traditional Chinese
 
 SUPPORTED LANGUAGES:
     Auto-detected by script: English, Chinese (Simplified/Traditional),

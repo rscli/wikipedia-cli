@@ -42,9 +42,10 @@ wiki [OPTIONS] <query>
 ### Options
 
 ```
--l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
+-q, --query        Query mode: fetch article summary (default)
 -s, --search       Search mode: list top results instead of fetching article
 -j, --json         Output as JSON (for piping to jq, scripts, etc.)
+-l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
 -h, --help         Print help information
 -V, --version      Print version information
 ```
@@ -52,8 +53,9 @@ wiki [OPTIONS] <query>
 ### Examples
 
 ```bash
-# English
+# English (default query mode)
 wiki rust
+wiki --query rust            # same as above, explicit
 wiki "Rust (programming language)"
 wiki "C++"
 
