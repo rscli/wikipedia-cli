@@ -18,7 +18,7 @@ async fn main() {
                 return;
             }
             "-V" | "--version" => {
-                println!("wikipedia {VERSION}");
+                println!("wk {VERSION}");
                 return;
             }
             _ => {}
@@ -33,7 +33,7 @@ async fn main() {
 
     let (lang, variant) = detect_language(&query);
 
-    eprintln!("[wikipedia] detected language: {lang}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default());
+    eprintln!("[wk] detected language: {lang}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default());
 
     let client = reqwest::Client::builder()
         .user_agent("wikipedia-cli/0.1.0")
@@ -232,18 +232,18 @@ async fn handle_disambiguation(
 }
 
 fn print_help() {
-    println!("wikipedia {VERSION}");
+    println!("wk {VERSION}");
     println!("Query Wikipedia from the command line with automatic language detection.\n");
     println!("USAGE:");
-    println!("    wikipedia <query>\n");
+    println!("    wk <query>\n");
     println!("OPTIONS:");
     println!("    -h, --help       Print help information");
     println!("    -V, --version    Print version information\n");
     println!("EXAMPLES:");
-    println!("    wikipedia rust");
-    println!("    wikipedia 大语言模型");
-    println!("    wikipedia プログラミング言語");
-    println!("    wikipedia 인공지능\n");
+    println!("    wk rust");
+    println!("    wk 大语言模型");
+    println!("    wk プログラミング言語");
+    println!("    wk 인공지능\n");
     println!("SUPPORTED LANGUAGES:");
     println!("    Auto-detected by script: English, Chinese (Simplified/Traditional),");
     println!("    Japanese, Korean, Arabic, Russian, Hindi, Thai, Hebrew, Greek,");

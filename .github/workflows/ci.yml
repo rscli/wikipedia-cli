@@ -28,70 +28,70 @@ jobs:
         run: cargo build --release
 
       - name: "Query: English → rust"
-        run: ./target/release/wikipedia rust
+        run: ./target/release/wk rust
 
       - name: "Query: Simplified Chinese → 大语言模型"
-        run: ./target/release/wikipedia 大语言模型
+        run: ./target/release/wk 大语言模型
 
       - name: "Query: Traditional Chinese → 機器學習"
-        run: ./target/release/wikipedia 機器學習
+        run: ./target/release/wk 機器學習
 
       - name: "Query: Japanese → プログラミング言語"
-        run: ./target/release/wikipedia プログラミング言語
+        run: ./target/release/wk プログラミング言語
 
       - name: "Query: Korean → 인공지능"
-        run: ./target/release/wikipedia 인공지능
+        run: ./target/release/wk 인공지능
 
       - name: "Query: Arabic → الذكاء_الاصطناعي"
-        run: ./target/release/wikipedia الذكاء_الاصطناعي
+        run: ./target/release/wk الذكاء_الاصطناعي
 
       - name: "Query: Russian → Искусственный интеллект"
-        run: ./target/release/wikipedia Искусственный интеллект
+        run: ./target/release/wk Искусственный интеллект
 
       - name: "Query: Hindi → कृत्रिम_बुद्धिमत्ता"
-        run: ./target/release/wikipedia कृत्रिम_बुद्धिमत्ता
+        run: ./target/release/wk कृत्रिम_बुद्धिमत्ता
 
       - name: "Query: Thai → ปัญญาประดิษฐ์"
-        run: ./target/release/wikipedia ปัญญาประดิษฐ์
+        run: ./target/release/wk ปัญญาประดิษฐ์
 
       - name: "Query: Greek → Τεχνητή νοημοσύνη"
-        run: ./target/release/wikipedia Τεχνητή νοημοσύνη
+        run: ./target/release/wk Τεχνητή νοημοσύνη
 
       - name: "Query: Hebrew → בינה מלאכותית"
-        run: ./target/release/wikipedia בינה מלאכותית
+        run: ./target/release/wk בינה מלאכותית
 
       - name: "Query: Specific → Rust (programming language)"
-        run: ./target/release/wikipedia "Rust (programming language)"
+        run: ./target/release/wk "Rust (programming language)"
 
       - name: "Query: Disambiguation → mercury"
-        run: ./target/release/wikipedia mercury
+        run: ./target/release/wk mercury
 
       - name: "Query: Emoji 🦀 → Crab"
-        run: ./target/release/wikipedia 🦀
+        run: ./target/release/wk 🦀
 
       - name: "Query: Emoji 🐍 → Snake"
-        run: ./target/release/wikipedia 🐍
+        run: ./target/release/wk 🐍
 
       - name: "Query: Emoji ☕ → Coffee"
-        run: ./target/release/wikipedia ☕
+        run: ./target/release/wk ☕
 
       - name: "Query: Emoji ⚛ → Atom"
-        run: ./target/release/wikipedia ⚛
+        run: ./target/release/wk ⚛
 
       - name: "Query: Emoji ♟ → Chess Pawn"
-        run: ./target/release/wikipedia ♟
+        run: ./target/release/wk ♟
 
       - name: "Query: Symbol ∞ → Infinity"
-        run: ./target/release/wikipedia ∞
+        run: ./target/release/wk ∞
 
       - name: "Query: Symbol π → Pi (Greek)"
-        run: ./target/release/wikipedia π
+        run: ./target/release/wk π
 
       - name: "Query: Symbol Ω → Omega (Greek)"
-        run: ./target/release/wikipedia Ω
+        run: ./target/release/wk Ω
 
       - name: "Query: Formula E=mc²"
-        run: ./target/release/wikipedia "E=mc²"
+        run: ./target/release/wk "E=mc²"
 
       - name: "Query: Special chars C++"
-        run: ./target/release/wikipedia "C++"
+        run: ./target/release/wk "C++"

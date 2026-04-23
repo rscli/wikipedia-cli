@@ -1,9 +1,9 @@
-# wikipedia
+# wk
 
 A command-line tool to query Wikipedia with automatic language detection.
 
 ```
-$ wikipedia rust
+$ wk rust
 --- Rust ---
 
 Rust is an iron oxide, a usually reddish-brown oxide formed by the reaction of iron and oxygen...
@@ -28,13 +28,13 @@ Or build from source:
 git clone https://github.com/rustq/wikipedia-cli.git
 cd wikipedia-cli
 cargo build --release
-# Binary at ./target/release/wikipedia
+# Binary at ./target/release/wk
 ```
 
 ## Usage
 
 ```
-wikipedia <query>
+wk <query>
 ```
 
 ### Options
@@ -48,33 +48,33 @@ wikipedia <query>
 
 ```bash
 # English
-wikipedia rust
-wikipedia "Rust (programming language)"
-wikipedia "C++"
+wk rust
+wk "Rust (programming language)"
+wk "C++"
 
 # Simplified Chinese
-wikipedia 大语言模型
+wk 大语言模型
 
 # Traditional Chinese
-wikipedia 機器學習
+wk 機器學習
 
 # Japanese
-wikipedia プログラミング言語
+wk プログラミング言語
 
 # Korean
-wikipedia 인공지능
+wk 인공지능
 
 # Arabic
-wikipedia الذكاء_الاصطناعي
+wk الذكاء_الاصطناعي
 
 # Russian
-wikipedia "Искусственный интеллект"
+wk "Искусственный интеллект"
 
 # Emoji & Symbols
-wikipedia 🦀
-wikipedia 🐍
-wikipedia ∞
-wikipedia "E=mc²"
+wk 🦀
+wk 🐍
+wk ∞
+wk "E=mc²"
 ```
 
 ## Language Detection
@@ -105,7 +105,7 @@ Language is auto-detected by analyzing Unicode script ranges in the query:
 When a query is ambiguous, the tool shows the primary article followed by a list of alternative meanings:
 
 ```
-$ wikipedia mercury
+$ wk mercury
 --- Mercury (planet) ---
 
 Mercury is the first planet from the Sun and the smallest in the Solar System...
