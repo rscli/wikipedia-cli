@@ -20,14 +20,22 @@ Rust is an iron oxide, a usually reddish-brown oxide formed by the reaction of i
 
 ## Install
 
+### Homebrew (macOS / Linux)
+
 ```bash
-cargo install --git https://github.com/rustq/wikipedia-cli
+brew install rscli/tap/wiki
 ```
 
-Or build from source:
+### Cargo
 
 ```bash
-git clone https://github.com/rustq/wikipedia-cli.git
+cargo install --git https://github.com/rscli/wikipedia-cli
+```
+
+### Build from source
+
+```bash
+git clone https://github.com/rscli/wikipedia-cli.git
 cd wikipedia-cli
 cargo build --release
 # Binary at ./target/release/wiki
