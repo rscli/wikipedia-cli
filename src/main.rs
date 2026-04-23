@@ -1,5 +1,5 @@
 use std::env;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const TIMEOUT_SECS: u64 = 10;
@@ -75,6 +75,8 @@ async fn main() {
 
     let variant_param = variant.map(|v| format!("&variant={v}")).unwrap_or_default();
 
+    let start = Instant::now();
+
     let search_url = format!(
         "https://{lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch={}&srlimit=1&format=json{variant_param}",
         urlencoding(&query)
@@ -124,7 +126,7 @@ async fn main() {
         .is_some();
 
     if is_disambiguation {
-        handle_disambiguation(&client, lang, &variant_param, &title).await;
+        handle_disambiguation(&client, lang, &variant_param, &title, start).await;
     } else {
         let page_title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
@@ -134,10 +136,20 @@ async fn main() {
         } else {
             println!("--- {page_title} ---\n");
             println!("{extract}");
+            print_elapsed(start);
             print_source_url(lang, page_title);
         }
 
         check_disambiguation_page(&client, lang, &variant_param, &query).await;
+    }
+}
+
+fn print_elapsed(start: Instant) {
+    let elapsed = start.elapsed();
+    if elapsed.as_secs() >= 1 {
+        println!("\nTime: {:.2}s", elapsed.as_secs_f64());
+    } else {
+        println!("\nTime: {}ms", elapsed.as_millis());
     }
 }
 
@@ -206,6 +218,7 @@ async fn handle_disambiguation(
     lang: &str,
     variant_param: &str,
     title: &str,
+    start: Instant,
 ) {
     let full_url = format!(
         "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext&titles={}&format=json&redirects=1{variant_param}",
@@ -239,6 +252,7 @@ async fn handle_disambiguation(
                     if !ext.is_empty() {
                         println!("--- {t} ---\n");
                         println!("{ext}");
+                        print_elapsed(start);
                         print_source_url(lang, t);
                     }
                 }
