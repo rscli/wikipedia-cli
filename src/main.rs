@@ -9,17 +9,19 @@ async fn main() {
     }
 
     let query = args.join(" ");
-    let lang = detect_language(&query);
+    let (lang, variant) = detect_language(&query);
 
-    eprintln!("[wikipedia-cli] detected language: {lang}");
+    eprintln!("[wikipedia] detected language: {lang}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default());
 
     let client = reqwest::Client::builder()
         .user_agent("wikipedia-cli/0.1.0")
         .build()
         .expect("Failed to build HTTP client");
 
+    let variant_param = variant.map(|v| format!("&variant={v}")).unwrap_or_default();
+
     let search_url = format!(
-        "https://{lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch={}&srlimit=1&format=json",
+        "https://{lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch={}&srlimit=1&format=json{variant_param}",
         urlencoding(&query)
     );
 
@@ -42,7 +44,7 @@ async fn main() {
     };
 
     let extract_url = format!(
-        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles={}&format=json&redirects=1",
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles={}&format=json&redirects=1{variant_param}",
         urlencoding(&title)
     );
 
@@ -69,7 +71,7 @@ async fn main() {
     }
 }
 
-fn detect_language(text: &str) -> &'static str {
+fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
     let mut japanese_score = 0u32;
     let mut korean_score = 0u32;
     let mut cjk_score = 0u32;
@@ -89,15 +91,12 @@ fn detect_language(text: &str) -> &'static str {
 
     for c in text.chars() {
         match c {
-            // Japanese: Hiragana + Katakana
             '\u{3040}'..='\u{309F}' | '\u{30A0}'..='\u{30FF}' | '\u{31F0}'..='\u{31FF}' => {
                 japanese_score += 1;
             }
-            // Korean: Hangul Syllables + Jamo
             '\u{AC00}'..='\u{D7AF}' | '\u{1100}'..='\u{11FF}' | '\u{3130}'..='\u{318F}' => {
                 korean_score += 1;
             }
-            // CJK Unified Ideographs (shared by Chinese/Japanese/Korean)
             '\u{4E00}'..='\u{9FFF}' | '\u{3400}'..='\u{4DBF}' | '\u{F900}'..='\u{FAFF}' => {
                 cjk_score += 1;
                 if is_simplified_indicator(c) {
@@ -106,47 +105,36 @@ fn detect_language(text: &str) -> &'static str {
                     traditional_score += 1;
                 }
             }
-            // Arabic
             '\u{0600}'..='\u{06FF}' | '\u{0750}'..='\u{077F}' | '\u{FB50}'..='\u{FDFF}' => {
                 arabic_score += 1;
             }
-            // Cyrillic
             '\u{0400}'..='\u{04FF}' | '\u{0500}'..='\u{052F}' => {
                 cyrillic_score += 1;
             }
-            // Devanagari (Hindi, Marathi, Sanskrit, Nepali)
             '\u{0900}'..='\u{097F}' => {
                 devanagari_score += 1;
             }
-            // Thai
             '\u{0E00}'..='\u{0E7F}' => {
                 thai_score += 1;
             }
-            // Hebrew
             '\u{0590}'..='\u{05FF}' | '\u{FB1D}'..='\u{FB4F}' => {
                 hebrew_score += 1;
             }
-            // Greek
             '\u{0370}'..='\u{03FF}' | '\u{1F00}'..='\u{1FFF}' => {
                 greek_score += 1;
             }
-            // Tamil
             '\u{0B80}'..='\u{0BFF}' => {
                 tamil_score += 1;
             }
-            // Bengali
             '\u{0980}'..='\u{09FF}' => {
                 bengali_score += 1;
             }
-            // Telugu
             '\u{0C00}'..='\u{0C7F}' => {
                 telugu_score += 1;
             }
-            // Turkish-specific Latin characters
             'ğ' | 'Ğ' | 'ş' | 'Ş' | 'ı' | 'İ' => {
                 turkish_score += 1;
             }
-            // Vietnamese-specific diacritics
             'ă' | 'Ă' | 'đ' | 'Đ' | 'ơ' | 'Ơ' | 'ư' | 'Ư' => {
                 vietnamese_score += 1;
             }
@@ -154,22 +142,19 @@ fn detect_language(text: &str) -> &'static str {
         }
     }
 
-    // Japanese-specific kana takes priority
     if japanese_score > 0 {
-        return "ja";
+        return ("ja", None);
     }
 
-    // Korean Hangul takes priority
     if korean_score > 0 {
-        return "ko";
+        return ("ko", None);
     }
 
-    // CJK characters without Japanese/Korean markers → Chinese
     if cjk_score > 0 {
         return if traditional_score > simplified_score {
-            "zh-yue" // Cantonese/Traditional → use yue or zh
+            ("zh", Some("zh-tw"))
         } else {
-            "zh"
+            ("zh", Some("zh-cn"))
         };
     }
 
@@ -188,10 +173,10 @@ fn detect_language(text: &str) -> &'static str {
     ];
 
     if let Some((_, lang)) = scores.iter().filter(|(s, _)| *s > 0).max_by_key(|(s, _)| *s) {
-        return lang;
+        return (lang, None);
     }
 
-    "en"
+    ("en", None)
 }
 
 fn is_simplified_indicator(c: char) -> bool {
