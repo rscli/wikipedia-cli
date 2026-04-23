@@ -134,10 +134,16 @@ async fn main() {
         } else {
             println!("--- {page_title} ---\n");
             println!("{extract}");
+            print_source_url(lang, page_title);
         }
 
         check_disambiguation_page(&client, lang, &variant_param, &query).await;
     }
+}
+
+fn print_source_url(lang: &str, title: &str) {
+    let encoded = title.replace(' ', "_");
+    println!("\nSource: https://{lang}.wikipedia.org/wiki/{encoded}");
 }
 
 fn filter_disambiguation_lines(text: &str) -> Vec<&str> {
@@ -233,6 +239,7 @@ async fn handle_disambiguation(
                     if !ext.is_empty() {
                         println!("--- {t} ---\n");
                         println!("{ext}");
+                        print_source_url(lang, t);
                     }
                 }
             }
