@@ -1,9 +1,31 @@
 use std::env;
-use std::io::Write;
+use std::io::{IsTerminal, Write};
 use std::time::{Duration, Instant};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const TIMEOUT_SECS: u64 = 10;
+
+struct Theme {
+    title: &'static str,
+    dim: &'static str,
+    url: &'static str,
+    warn: &'static str,
+    bullet: &'static str,
+    reset: &'static str,
+}
+
+const COLOR: Theme = Theme {
+    title:  "\x1b[1;32m",
+    dim:    "\x1b[2m",
+    url:    "\x1b[36m",
+    warn:   "\x1b[33m",
+    bullet: "\x1b[33m",
+    reset:  "\x1b[0m",
+};
+
+const PLAIN: Theme = Theme {
+    title: "", dim: "", url: "", warn: "", bullet: "", reset: "",
+};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -67,6 +89,8 @@ async fn main() {
         if forced_lang.is_some() { " (manual)" } else { " (auto)" }
     );
 
+    let t = if std::io::stdout().is_terminal() { &COLOR } else { &PLAIN };
+
     let client = reqwest::Client::builder()
         .user_agent(concat!("wiki/", env!("CARGO_PKG_VERSION")))
         .timeout(Duration::from_secs(TIMEOUT_SECS))
@@ -126,7 +150,7 @@ async fn main() {
         .is_some();
 
     if is_disambiguation {
-        handle_disambiguation(&client, lang, variant_param, &title, start).await;
+        handle_disambiguation(&client, lang, variant_param, &title, start, t).await;
     } else {
         let page_title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
@@ -134,33 +158,46 @@ async fn main() {
         if extract.is_empty() {
             println!("No article found for '{query}'.");
         } else {
-            println!("--- {page_title} ---\n");
-            println!("{extract}");
-            print_elapsed(start);
-            print_source_url(lang, page_title);
+            print_article(t, page_title, extract);
+            print_footer(t, start, lang, page_title);
         }
 
-        check_disambiguation_page(&client, lang, variant_param, &query).await;
+        check_disambiguation_page(&client, lang, variant_param, &query, t).await;
     }
 }
 
-fn print_elapsed(start: Instant) {
+fn print_article(t: &Theme, title: &str, extract: &str) {
+    let bar = "─".repeat(title.len() + 2);
+    println!("{}┌─ {} {}{}",  t.title, title, bar, t.reset);
+    println!();
+    println!("{extract}");
+}
+
+fn print_footer(t: &Theme, start: Instant, lang: &str, title: &str) {
     let elapsed = start.elapsed();
-    if elapsed.as_secs() >= 1 {
-        println!("\nTime: {:.2}s", elapsed.as_secs_f64());
+    let time = if elapsed.as_secs() >= 1 {
+        format!("{:.2}s", elapsed.as_secs_f64())
     } else {
-        println!("\nTime: {}ms", elapsed.as_millis());
-    }
-}
-
-fn print_source_url(lang: &str, title: &str) {
+        format!("{}ms", elapsed.as_millis())
+    };
     let out = std::io::stdout();
     let mut out = out.lock();
-    let _ = write!(out, "\nSource: https://{lang}.wikipedia.org/wiki/");
+    let _ = write!(out, "\n{}└─ {time} {}{} · {}https://{lang}.wikipedia.org/wiki/", t.dim, t.reset, t.dim, t.url);
     for b in title.bytes() {
         let _ = out.write_all(if b == b' ' { b"_" } else { std::slice::from_ref(&b) });
     }
+    let _ = writeln!(out, "{}", t.reset);
+}
+
+fn print_disambig(t: &Theme, header: &str, query: &str, suggestions: &[&str]) {
+    let out = std::io::stdout();
+    let mut out = out.lock();
+    let _ = writeln!(out, "\n{}════════════════════════════════════════{}", t.dim, t.reset);
+    let _ = writeln!(out, "{}\"{}\" {}{}", t.warn, query, header, t.reset);
     let _ = writeln!(out);
+    for s in suggestions {
+        let _ = writeln!(out, "  {}▸{} {s}", t.bullet, t.reset);
+    }
 }
 
 fn get_first_page(json: &serde_json::Value) -> Option<&serde_json::Value> {
@@ -186,6 +223,7 @@ async fn check_disambiguation_page(
     lang: &str,
     variant_param: &str,
     query: &str,
+    t: &Theme,
 ) {
     let disambig_title = format!("{query} (disambiguation)");
     let url = format!(
@@ -202,13 +240,7 @@ async fn check_disambiguation_page(
     let suggestions = filter_disambiguation_lines(extract);
 
     if !suggestions.is_empty() {
-        let out = std::io::stdout();
-        let mut out = out.lock();
-        let _ = writeln!(out, "\n========================================");
-        let _ = writeln!(out, "\"{}\" may also refer to:\n", query);
-        for s in &suggestions {
-            let _ = writeln!(out, "  - {s}");
-        }
+        print_disambig(t, "may also refer to:", query, &suggestions);
     }
 }
 
@@ -218,6 +250,7 @@ async fn handle_disambiguation(
     variant_param: &str,
     title: &str,
     start: Instant,
+    t: &Theme,
 ) {
     let full_url = format!(
         "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext&titles={}&format=json&redirects=1{variant_param}",
@@ -249,26 +282,18 @@ async fn handle_disambiguation(
 
         if let Some(json) = fetch_json(client, &url).await {
             if let Some(p) = get_first_page(&json) {
-                let t = p.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
+                let pt = p.get("title").and_then(|v| v.as_str()).unwrap_or("Unknown");
                 let ext = p.get("extract").and_then(|e| e.as_str()).unwrap_or("");
                 if !ext.is_empty() {
-                    println!("--- {t} ---\n");
-                    println!("{ext}");
-                    print_elapsed(start);
-                    print_source_url(lang, t);
+                    print_article(t, pt, ext);
+                    print_footer(t, start, lang, pt);
                 }
             }
         }
     }
 
     if !suggestions.is_empty() {
-        let out = std::io::stdout();
-        let mut out = out.lock();
-        let _ = writeln!(out, "\n========================================");
-        let _ = writeln!(out, "\"{}\" is ambiguous. Did you mean:\n", title);
-        for s in &suggestions {
-            let _ = writeln!(out, "  - {s}");
-        }
+        print_disambig(t, "is ambiguous. Did you mean:", title, &suggestions);
     }
 }
 
