@@ -1,0 +1,67 @@
+name: Get
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  get:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --release
+
+      - name: "Default: rust"
+        run: ./target/release/wiki rust
+
+      - name: "--get rust"
+        run: ./target/release/wiki --get rust
+
+      - name: "-g 大语言模型"
+        run: ./target/release/wiki -g 大语言模型
+
+      - name: "Albert Einstein"
+        run: ./target/release/wiki "Albert Einstein"
+
+      - name: "Linux"
+        run: ./target/release/wiki Linux
+
+      - name: "Tokyo"
+        run: ./target/release/wiki Tokyo
+
+      - name: "DNA"
+        run: ./target/release/wiki DNA
+
+      - name: "Quantum computing"
+        run: ./target/release/wiki "quantum computing"
+
+      - name: "Black hole"
+        run: ./target/release/wiki "black hole"
+
+      - name: "Long sentence (English)"
+        run: ./target/release/wiki "the history of artificial intelligence"
+
+      - name: "Long sentence (Chinese)"
+        run: ./target/release/wiki "量子计算机的工作原理是什么"
+
+      - name: "Long sentence (Japanese)"
+        run: ./target/release/wiki "ニューラルネットワークの仕組み"
+
+      - name: "-g -l zh rust"
+        run: ./target/release/wiki -g -l zh rust

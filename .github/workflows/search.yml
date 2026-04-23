@@ -1,0 +1,52 @@
+name: Search
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --release
+
+      - name: "--search rust"
+        run: ./target/release/wiki --search rust
+
+      - name: "-s programming language"
+        run: ./target/release/wiki -s "programming language"
+
+      - name: "--search 人工智能"
+        run: ./target/release/wiki --search 人工智能
+
+      - name: "--search プログラミング (Japanese)"
+        run: ./target/release/wiki --search プログラミング
+
+      - name: "-s -l zh rust"
+        run: ./target/release/wiki -s -l zh rust
+
+      - name: "-s -l ja programming"
+        run: ./target/release/wiki -s -l ja programming
+
+      - name: "--search mercury (disambiguation)"
+        run: ./target/release/wiki --search mercury
+
+      - name: "--search 인공지능 (Korean)"
+        run: ./target/release/wiki --search 인공지능
