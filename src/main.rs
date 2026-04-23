@@ -1,14 +1,36 @@
 use std::env;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[tokio::main]
 async fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
+
     if args.is_empty() {
-        eprintln!("Usage: wikipedia <query>");
+        print_help();
         std::process::exit(1);
     }
 
-    let query = args.join(" ");
+    if args.len() == 1 {
+        match args[0].as_str() {
+            "-h" | "--help" => {
+                print_help();
+                return;
+            }
+            "-V" | "--version" => {
+                println!("wikipedia {VERSION}");
+                return;
+            }
+            _ => {}
+        }
+    }
+
+    let query = args.iter().filter(|a| !a.starts_with('-')).cloned().collect::<Vec<_>>().join(" ");
+    if query.is_empty() {
+        print_help();
+        std::process::exit(1);
+    }
+
     let (lang, variant) = detect_language(&query);
 
     eprintln!("[wikipedia] detected language: {lang}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default());
@@ -44,7 +66,7 @@ async fn main() {
     };
 
     let extract_url = format!(
-        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles={}&format=json&redirects=1{variant_param}",
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts|pageprops&exintro&explaintext&titles={}&format=json&redirects=1{variant_param}",
         urlencoding(&title)
     );
 
@@ -58,7 +80,22 @@ async fn main() {
         std::process::exit(1);
     };
 
-    for page in pages.values() {
+    let page = match pages.values().next() {
+        Some(p) => p,
+        None => {
+            eprintln!("No article found for '{query}'.");
+            std::process::exit(1);
+        }
+    };
+
+    let is_disambiguation = page
+        .get("pageprops")
+        .and_then(|pp| pp.get("disambiguation"))
+        .is_some();
+
+    if is_disambiguation {
+        handle_disambiguation(&client, lang, &variant_param, &title, page).await;
+    } else {
         let title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
 
@@ -69,6 +106,92 @@ async fn main() {
             println!("{extract}");
         }
     }
+}
+
+async fn handle_disambiguation(
+    client: &reqwest::Client,
+    lang: &str,
+    variant_param: &str,
+    title: &str,
+    page: &serde_json::Value,
+) {
+    let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
+
+    let suggestions: Vec<String> = extract
+        .lines()
+        .filter(|line| !line.is_empty())
+        .map(|line| line.to_string())
+        .collect();
+
+    let first_link = suggestions.iter()
+        .filter_map(|line| {
+            let trimmed = line.trim();
+            if trimmed.contains("may also refer to")
+                || trimmed.contains("most commonly refers to")
+                || trimmed.is_empty()
+            {
+                return None;
+            }
+            let name = trimmed.split(',').next().unwrap_or(trimmed).trim();
+            if name.is_empty() || name.len() < 2 {
+                return None;
+            }
+            Some(name.to_string())
+        })
+        .next();
+
+    if let Some(ref first) = first_link {
+        let url = format!(
+            "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles={}&format=json&redirects=1{variant_param}",
+            urlencoding(first)
+        );
+
+        if let Some(json) = fetch_json(client, &url).await {
+            if let Some(pages) = json.get("query").and_then(|q| q.get("pages")).and_then(|p| p.as_object()) {
+                for p in pages.values() {
+                    let t = p.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
+                    let ext = p.get("extract").and_then(|e| e.as_str()).unwrap_or("");
+                    if !ext.is_empty() {
+                        println!("--- {t} ---\n");
+                        println!("{ext}");
+                    }
+                }
+            }
+        }
+    }
+
+    if !suggestions.is_empty() {
+        println!("\n========================================");
+        println!("\"{}\" is ambiguous. Did you mean:\n", title);
+        for s in &suggestions {
+            let trimmed = s.trim();
+            if !trimmed.is_empty()
+                && !trimmed.contains("may also refer to")
+                && !trimmed.contains("most commonly refers to")
+            {
+                println!("  - {trimmed}");
+            }
+        }
+    }
+}
+
+fn print_help() {
+    println!("wikipedia {VERSION}");
+    println!("Query Wikipedia from the command line with automatic language detection.\n");
+    println!("USAGE:");
+    println!("    wikipedia <query>\n");
+    println!("OPTIONS:");
+    println!("    -h, --help       Print help information");
+    println!("    -V, --version    Print version information\n");
+    println!("EXAMPLES:");
+    println!("    wikipedia rust");
+    println!("    wikipedia 大语言模型");
+    println!("    wikipedia プログラミング言語");
+    println!("    wikipedia 인공지능\n");
+    println!("SUPPORTED LANGUAGES:");
+    println!("    Auto-detected by script: English, Chinese (Simplified/Traditional),");
+    println!("    Japanese, Korean, Arabic, Russian, Hindi, Thai, Hebrew, Greek,");
+    println!("    Tamil, Bengali, Telugu, Turkish, Vietnamese");
 }
 
 fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
