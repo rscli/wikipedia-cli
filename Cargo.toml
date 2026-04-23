@@ -2,13 +2,16 @@
 name = "wiki"
 version = "0.1.0"
 edition = "2021"
+description = "Query Wikipedia from the command line with automatic language detection"
+repository = "https://github.com/rustq/wikipedia-cli"
+license = "MIT"
+keywords = ["wikipedia", "cli", "search"]
 
 [[bin]]
 name = "wiki"
 path = "src/main.rs"
 
 [dependencies]
-reqwest = { version = "0.12", features = ["json"] }
-tokio = { version = "1", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
+reqwest = { version = "0.12", default-features = false, features = ["default-tls"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 serde_json = "1"

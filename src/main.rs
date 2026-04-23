@@ -13,20 +13,6 @@ async fn main() {
         std::process::exit(1);
     }
 
-    if args.len() == 1 {
-        match args[0].as_str() {
-            "-h" | "--help" => {
-                print_help();
-                return;
-            }
-            "-V" | "--version" => {
-                println!("wiki {VERSION}");
-                return;
-            }
-            _ => {}
-        }
-    }
-
     let mut forced_lang: Option<String> = None;
     let mut query_parts: Vec<String> = Vec::new();
     let mut i = 0;
@@ -74,7 +60,11 @@ async fn main() {
         (detected_lang, detected_variant)
     };
 
-    eprintln!("[wiki] language: {lang}{}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default(), if forced_lang.is_some() { " (manual)" } else { " (auto)" });
+    eprintln!(
+        "[wiki] language: {lang}{}{}",
+        variant.map(|v| format!(", variant: {v}")).unwrap_or_default(),
+        if forced_lang.is_some() { " (manual)" } else { " (auto)" }
+    );
 
     let client = reqwest::Client::builder()
         .user_agent("wiki/0.1.0")
@@ -123,12 +113,9 @@ async fn main() {
         std::process::exit(1);
     };
 
-    let page = match pages.values().next() {
-        Some(p) => p,
-        None => {
-            eprintln!("No article found for '{query}'.");
-            std::process::exit(1);
-        }
+    let Some(page) = pages.values().next() else {
+        eprintln!("No article found for '{query}'.");
+        std::process::exit(1);
     };
 
     let is_disambiguation = page
@@ -137,7 +124,7 @@ async fn main() {
         .is_some();
 
     if is_disambiguation {
-        handle_disambiguation(&client, lang, &variant_param, &title, page).await;
+        handle_disambiguation(&client, lang, &variant_param, &title).await;
     } else {
         let page_title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
@@ -151,6 +138,31 @@ async fn main() {
 
         check_disambiguation_page(&client, lang, &variant_param, &query).await;
     }
+}
+
+fn filter_disambiguation_lines(text: &str) -> Vec<&str> {
+    text.lines()
+        .map(|l| l.trim())
+        .filter(|l| {
+            !l.is_empty()
+                && !l.starts_with("==")
+                && !l.contains("may also refer to")
+                && !l.contains("most commonly refers to")
+                && !l.contains("may refer to")
+                && !l.starts_with("All pages with")
+        })
+        .collect()
+}
+
+fn fetch_disambiguation_extract(json: &serde_json::Value) -> String {
+    json.get("query")
+        .and_then(|q| q.get("pages"))
+        .and_then(|p| p.as_object())
+        .and_then(|pages| pages.values().next())
+        .and_then(|p| p.get("extract"))
+        .and_then(|e| e.as_str())
+        .unwrap_or("")
+        .to_string()
 }
 
 async fn check_disambiguation_page(
@@ -167,25 +179,12 @@ async fn check_disambiguation_page(
 
     let Some(json) = fetch_json(client, &url).await else { return };
     let Some(pages) = json.get("query").and_then(|q| q.get("pages")).and_then(|p| p.as_object()) else { return };
-
     let Some(page) = pages.values().next() else { return };
 
-    let is_disambig = page.get("pageprops").and_then(|pp| pp.get("disambiguation")).is_some();
-    if !is_disambig { return }
+    if page.get("pageprops").and_then(|pp| pp.get("disambiguation")).is_none() { return }
 
     let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
-    let suggestions: Vec<&str> = extract
-        .lines()
-        .map(|l| l.trim())
-        .filter(|l| {
-            !l.is_empty()
-                && !l.starts_with("==")
-                && !l.contains("may also refer to")
-                && !l.contains("most commonly refers to")
-                && !l.contains("may refer to")
-                && !l.starts_with("All pages with")
-        })
-        .collect();
+    let suggestions = filter_disambiguation_lines(extract);
 
     if !suggestions.is_empty() {
         println!("\n========================================");
@@ -201,7 +200,6 @@ async fn handle_disambiguation(
     lang: &str,
     variant_param: &str,
     title: &str,
-    _page: &serde_json::Value,
 ) {
     let full_url = format!(
         "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext&titles={}&format=json&redirects=1{variant_param}",
@@ -209,41 +207,17 @@ async fn handle_disambiguation(
     );
 
     let extract = match fetch_json(client, &full_url).await {
-        Some(json) => {
-            json.get("query")
-                .and_then(|q| q.get("pages"))
-                .and_then(|p| p.as_object())
-                .and_then(|pages| pages.values().next())
-                .and_then(|p| p.get("extract"))
-                .and_then(|e| e.as_str())
-                .unwrap_or("")
-                .to_string()
-        }
+        Some(json) => fetch_disambiguation_extract(&json),
         None => String::new(),
     };
 
-    let suggestions: Vec<&str> = extract
-        .lines()
-        .map(|l| l.trim())
-        .filter(|l| {
-            !l.is_empty()
-                && !l.starts_with("==")
-                && !l.contains("may also refer to")
-                && !l.contains("most commonly refers to")
-                && !l.contains("may refer to")
-                && !l.starts_with("All pages with")
-        })
-        .collect();
+    let suggestions = filter_disambiguation_lines(&extract);
 
     let first_link = suggestions.iter()
-        .filter_map(|line| {
+        .find_map(|line| {
             let name = line.split(',').next().unwrap_or(line).trim();
-            if name.is_empty() || name.len() < 2 {
-                return None;
-            }
-            Some(name.to_string())
-        })
-        .next();
+            if name.len() >= 2 { Some(name.to_string()) } else { None }
+        });
 
     if let Some(ref first) = first_link {
         let url = format!(
@@ -253,7 +227,7 @@ async fn handle_disambiguation(
 
         if let Some(json) = fetch_json(client, &url).await {
             if let Some(pages) = json.get("query").and_then(|q| q.get("pages")).and_then(|p| p.as_object()) {
-                for p in pages.values() {
+                if let Some(p) = pages.values().next() {
                     let t = p.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
                     let ext = p.get("extract").and_then(|e| e.as_str()).unwrap_or("");
                     if !ext.is_empty() {
@@ -337,44 +311,21 @@ fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
             '\u{0400}'..='\u{04FF}' | '\u{0500}'..='\u{052F}' => {
                 cyrillic_score += 1;
             }
-            '\u{0900}'..='\u{097F}' => {
-                devanagari_score += 1;
-            }
-            '\u{0E00}'..='\u{0E7F}' => {
-                thai_score += 1;
-            }
-            '\u{0590}'..='\u{05FF}' | '\u{FB1D}'..='\u{FB4F}' => {
-                hebrew_score += 1;
-            }
-            '\u{0370}'..='\u{03FF}' | '\u{1F00}'..='\u{1FFF}' => {
-                greek_score += 1;
-            }
-            '\u{0B80}'..='\u{0BFF}' => {
-                tamil_score += 1;
-            }
-            '\u{0980}'..='\u{09FF}' => {
-                bengali_score += 1;
-            }
-            '\u{0C00}'..='\u{0C7F}' => {
-                telugu_score += 1;
-            }
-            'ğ' | 'Ğ' | 'ş' | 'Ş' | 'ı' | 'İ' => {
-                turkish_score += 1;
-            }
-            'ă' | 'Ă' | 'đ' | 'Đ' | 'ơ' | 'Ơ' | 'ư' | 'Ư' => {
-                vietnamese_score += 1;
-            }
+            '\u{0900}'..='\u{097F}' => devanagari_score += 1,
+            '\u{0E00}'..='\u{0E7F}' => thai_score += 1,
+            '\u{0590}'..='\u{05FF}' | '\u{FB1D}'..='\u{FB4F}' => hebrew_score += 1,
+            '\u{0370}'..='\u{03FF}' | '\u{1F00}'..='\u{1FFF}' => greek_score += 1,
+            '\u{0B80}'..='\u{0BFF}' => tamil_score += 1,
+            '\u{0980}'..='\u{09FF}' => bengali_score += 1,
+            '\u{0C00}'..='\u{0C7F}' => telugu_score += 1,
+            'ğ' | 'Ğ' | 'ş' | 'Ş' | 'ı' | 'İ' => turkish_score += 1,
+            'ă' | 'Ă' | 'đ' | 'Đ' | 'ơ' | 'Ơ' | 'ư' | 'Ư' => vietnamese_score += 1,
             _ => {}
         }
     }
 
-    if japanese_score > 0 {
-        return ("ja", None);
-    }
-
-    if korean_score > 0 {
-        return ("ko", None);
-    }
+    if japanese_score > 0 { return ("ja", None); }
+    if korean_score > 0 { return ("ko", None); }
 
     if cjk_score > 0 {
         return if traditional_score > simplified_score {
@@ -384,18 +335,11 @@ fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
         };
     }
 
-    let scores = [
-        (arabic_score, "ar"),
-        (cyrillic_score, "ru"),
-        (devanagari_score, "hi"),
-        (thai_score, "th"),
-        (hebrew_score, "he"),
-        (greek_score, "el"),
-        (tamil_score, "ta"),
-        (bengali_score, "bn"),
-        (telugu_score, "te"),
-        (turkish_score, "tr"),
-        (vietnamese_score, "vi"),
+    let scores: [_; 11] = [
+        (arabic_score, "ar"), (cyrillic_score, "ru"), (devanagari_score, "hi"),
+        (thai_score, "th"), (hebrew_score, "he"), (greek_score, "el"),
+        (tamil_score, "ta"), (bengali_score, "bn"), (telugu_score, "te"),
+        (turkish_score, "tr"), (vietnamese_score, "vi"),
     ];
 
     if let Some((_, lang)) = scores.iter().filter(|(s, _)| *s > 0).max_by_key(|(s, _)| *s) {
@@ -443,14 +387,15 @@ async fn fetch_json(client: &reqwest::Client, url: &str) -> Option<serde_json::V
 }
 
 fn urlencoding(s: &str) -> String {
-    let mut result = String::new();
+    let mut buf = [0u8; 4];
+    let mut result = String::with_capacity(s.len() * 2);
     for c in s.chars() {
         if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.' | '~') {
             result.push(c);
         } else if c == ' ' {
             result.push('+');
         } else {
-            for b in c.to_string().bytes() {
+            for &b in c.encode_utf8(&mut buf).as_bytes() {
                 result.push('%');
                 result.push_str(&format!("{b:02X}"));
             }
