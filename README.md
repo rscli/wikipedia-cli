@@ -4,16 +4,18 @@ A command-line tool to query Wikipedia with automatic language detection.
 
 ```
 $ wiki rust
---- Rust ---
+┌─ Rust ────────
 
 Rust is an iron oxide, a usually reddish-brown oxide formed by the reaction of iron and oxygen...
 
-========================================
+└─ 342ms · https://en.wikipedia.org/wiki/Rust
+
+════════════════════════════════════════
 "rust" may also refer to:
 
-  - Rust (programming language), a general purpose programming language focused on performance and memory safety
-  - Rust (video game), a video game developed by Facepunch Studios
-  - ...
+  ▸ Rust (programming language), a general purpose programming language focused on performance and memory safety
+  ▸ Rust (video game), a video game developed by Facepunch Studios
+  ▸ ...
 ```
 
 ## Install
@@ -34,7 +36,7 @@ cargo build --release
 ## Usage
 
 ```
-wiki <query>
+wiki [OPTIONS] <query>
 ```
 
 ### Options
@@ -117,22 +119,68 @@ Language is auto-detected by analyzing Unicode script ranges in the query:
 | Turkish markers | Turkish | tr.wikipedia.org |
 | Vietnamese markers | Vietnamese | vi.wikipedia.org |
 
+## Search Mode
+
+List top search results without fetching full articles:
+
+```
+$ wiki --search rust
+┌─ search: rust ──────────────────────
+
+  ▸ [1] Rust
+    Rust is an iron oxide, a usually reddish-brown oxide...
+  ▸ [2] Rust (programming language)
+    Rust is a general-purpose programming language...
+  ▸ [3] Rust (video game)
+    Rust is a multiplayer survival video game...
+
+└─ 10 results · 245ms
+```
+
+## JSON Output
+
+Machine-readable output for piping to `jq`, scripts, or other tools:
+
+```
+$ wiki --json rust
+{
+  "title": "Rust",
+  "extract": "Rust is an iron oxide...",
+  "url": "https://en.wikipedia.org/wiki/Rust",
+  "language": "en",
+  "time_ms": 342
+}
+
+$ wiki --search --json rust
+{
+  "query": "rust",
+  "language": "en",
+  "time_ms": 198,
+  "results": [
+    { "title": "Rust", "snippet": "...", "url": "..." },
+    ...
+  ]
+}
+```
+
 ## Disambiguation
 
 When a query is ambiguous, the tool shows the primary article followed by a list of alternative meanings:
 
 ```
 $ wiki mercury
---- Mercury (planet) ---
+┌─ Mercury (planet) ──────────────
 
 Mercury is the first planet from the Sun and the smallest in the Solar System...
 
-========================================
+└─ 523ms · https://en.wikipedia.org/wiki/Mercury_(planet)
+
+════════════════════════════════════════
 "Mercury" is ambiguous. Did you mean:
 
-  - Mercury (planet), the closest planet to the Sun
-  - Mercury (element), a chemical element
-  - Mercury (mythology), a Roman deity
+  ▸ Mercury (planet), the closest planet to the Sun
+  ▸ Mercury (element), a chemical element
+  ▸ Mercury (mythology), a Roman deity
 ```
 
 ## License
