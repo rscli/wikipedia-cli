@@ -1,4 +1,4 @@
-# wiki
+# wikipedia-cli
 
 A command-line tool to query Wikipedia with automatic language detection.
 
