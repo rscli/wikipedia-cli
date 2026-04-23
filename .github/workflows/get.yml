@@ -63,5 +63,8 @@ jobs:
       - name: "Long sentence (Japanese)"
         run: ./target/release/wiki "ニューラルネットワークの仕組み"
 
+      - name: "GitHub"
+        run: ./target/release/wiki github
+
       - name: "-g -l zh rust"
         run: ./target/release/wiki -g -l zh rust
