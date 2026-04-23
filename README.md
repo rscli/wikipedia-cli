@@ -1,9 +1,9 @@
-# wk
+# wiki
 
 A command-line tool to query Wikipedia with automatic language detection.
 
 ```
-$ wk rust
+$ wiki rust
 --- Rust ---
 
 Rust is an iron oxide, a usually reddish-brown oxide formed by the reaction of iron and oxygen...
@@ -19,22 +19,22 @@ Rust is an iron oxide, a usually reddish-brown oxide formed by the reaction of i
 ## Install
 
 ```bash
-cargo install --git https://github.com/rustq/wk
+cargo install --git https://github.com/rustq/wiki
 ```
 
 Or build from source:
 
 ```bash
-git clone https://github.com/rustq/wk.git
-cd wk
+git clone https://github.com/rustq/wiki.git
+cd wiki
 cargo build --release
-# Binary at ./target/release/wk
+# Binary at ./target/release/wiki
 ```
 
 ## Usage
 
 ```
-wk <query>
+wiki <query>
 ```
 
 ### Options
@@ -49,38 +49,38 @@ wk <query>
 
 ```bash
 # English
-wk rust
-wk "Rust (programming language)"
-wk "C++"
+wiki rust
+wiki "Rust (programming language)"
+wiki "C++"
 
 # Simplified Chinese
-wk 大语言模型
+wiki 大语言模型
 
 # Traditional Chinese
-wk 機器學習
+wiki 機器學習
 
 # Japanese
-wk プログラミング言語
+wiki プログラミング言語
 
 # Korean
-wk 인공지능
+wiki 인공지능
 
 # Arabic
-wk الذكاء_الاصطناعي
+wiki الذكاء_الاصطناعي
 
 # Russian
-wk "Искусственный интеллект"
+wiki "Искусственный интеллект"
 
 # Emoji & Symbols
-wk 🦀
-wk 🐍
-wk ∞
-wk "E=mc²"
+wiki 🦀
+wiki 🐍
+wiki ∞
+wiki "E=mc²"
 
 # Force language with -l
-wk -l zh rust              # query 'rust' on Chinese Wikipedia
-wk -l ja programming       # query on Japanese Wikipedia
-wk -l zh-tw machine learning  # query in Traditional Chinese
+wiki -l zh rust              # query 'rust' on Chinese Wikipedia
+wiki -l ja programming       # query on Japanese Wikipedia
+wiki -l zh-tw machine learning  # query in Traditional Chinese
 ```
 
 ## Language Detection
@@ -111,7 +111,7 @@ Language is auto-detected by analyzing Unicode script ranges in the query:
 When a query is ambiguous, the tool shows the primary article followed by a list of alternative meanings:
 
 ```
-$ wk mercury
+$ wiki mercury
 --- Mercury (planet) ---
 
 Mercury is the first planet from the Sun and the smallest in the Solar System...

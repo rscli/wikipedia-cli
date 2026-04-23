@@ -1,10 +1,10 @@
 [package]
-name = "wk"
+name = "wiki"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "wk"
+name = "wiki"
 path = "src/main.rs"
 
 [dependencies]

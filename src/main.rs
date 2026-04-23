@@ -20,7 +20,7 @@ async fn main() {
                 return;
             }
             "-V" | "--version" => {
-                println!("wk {VERSION}");
+                println!("wiki {VERSION}");
                 return;
             }
             _ => {}
@@ -46,7 +46,7 @@ async fn main() {
                 return;
             }
             "-V" | "--version" => {
-                println!("wk {VERSION}");
+                println!("wiki {VERSION}");
                 return;
             }
             other => {
@@ -74,10 +74,10 @@ async fn main() {
         (detected_lang, detected_variant)
     };
 
-    eprintln!("[wk] language: {lang}{}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default(), if forced_lang.is_some() { " (manual)" } else { " (auto)" });
+    eprintln!("[wiki] language: {lang}{}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default(), if forced_lang.is_some() { " (manual)" } else { " (auto)" });
 
     let client = reqwest::Client::builder()
-        .user_agent("wk/0.1.0")
+        .user_agent("wiki/0.1.0")
         .timeout(Duration::from_secs(TIMEOUT_SECS))
         .connect_timeout(Duration::from_secs(5))
         .build()
@@ -275,22 +275,22 @@ async fn handle_disambiguation(
 }
 
 fn print_help() {
-    println!("wk {VERSION}");
+    println!("wiki {VERSION}");
     println!("Query Wikipedia from the command line with automatic language detection.\n");
     println!("USAGE:");
-    println!("    wk <query>\n");
+    println!("    wiki <query>\n");
     println!("OPTIONS:");
     println!("    -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)");
     println!("    -h, --help         Print help information");
     println!("    -V, --version      Print version information\n");
     println!("EXAMPLES:");
-    println!("    wk rust");
-    println!("    wk 大语言模型");
-    println!("    wk プログラミング言語");
-    println!("    wk 인공지능");
-    println!("    wk -l zh rust              # query 'rust' on Chinese Wikipedia");
-    println!("    wk -l ja programming       # query 'programming' on Japanese Wikipedia");
-    println!("    wk -l zh-tw machine learning  # query in Traditional Chinese\n");
+    println!("    wiki rust");
+    println!("    wiki 大语言模型");
+    println!("    wiki プログラミング言語");
+    println!("    wiki 인공지능");
+    println!("    wiki -l zh rust              # query 'rust' on Chinese Wikipedia");
+    println!("    wiki -l ja programming       # query 'programming' on Japanese Wikipedia");
+    println!("    wiki -l zh-tw machine learning  # query in Traditional Chinese\n");
     println!("SUPPORTED LANGUAGES:");
     println!("    Auto-detected by script: English, Chinese (Simplified/Traditional),");
     println!("    Japanese, Korean, Arabic, Russian, Hindi, Thai, Hebrew, Greek,");
@@ -429,11 +429,11 @@ async fn fetch_json(client: &reqwest::Client, url: &str) -> Option<serde_json::V
     let resp = match client.get(url).send().await {
         Ok(r) => r,
         Err(e) if e.is_timeout() => {
-            eprintln!("[wk] Error: request timed out after {TIMEOUT_SECS}s. Please check your network and try again.");
+            eprintln!("[wiki] Error: request timed out after {TIMEOUT_SECS}s. Please check your network and try again.");
             std::process::exit(1);
         }
         Err(e) if e.is_connect() => {
-            eprintln!("[wk] Error: connection failed. Please check your network.");
+            eprintln!("[wiki] Error: connection failed. Please check your network.");
             std::process::exit(1);
         }
         Err(_) => return None,
