@@ -65,3 +65,33 @@ jobs:
 
       - name: "Query: Disambiguation → mercury"
         run: ./target/release/wikipedia mercury
+
+      - name: "Query: Emoji 🦀 → Crab"
+        run: ./target/release/wikipedia 🦀
+
+      - name: "Query: Emoji 🐍 → Snake"
+        run: ./target/release/wikipedia 🐍
+
+      - name: "Query: Emoji ☕ → Coffee"
+        run: ./target/release/wikipedia ☕
+
+      - name: "Query: Emoji ⚛ → Atom"
+        run: ./target/release/wikipedia ⚛
+
+      - name: "Query: Emoji ♟ → Chess Pawn"
+        run: ./target/release/wikipedia ♟
+
+      - name: "Query: Symbol ∞ → Infinity"
+        run: ./target/release/wikipedia ∞
+
+      - name: "Query: Symbol π → Pi (Greek)"
+        run: ./target/release/wikipedia π
+
+      - name: "Query: Symbol Ω → Omega (Greek)"
+        run: ./target/release/wikipedia Ω
+
+      - name: "Query: Formula E=mc²"
+        run: ./target/release/wikipedia "E=mc²"
+
+      - name: "Query: Special chars C++"
+        run: ./target/release/wikipedia "C++"
