@@ -4,7 +4,7 @@ use std::env;
 async fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
     if args.is_empty() {
-        eprintln!("Usage: wikipedia-cli <query>");
+        eprintln!("Usage: wikipedia <query>");
         std::process::exit(1);
     }
 

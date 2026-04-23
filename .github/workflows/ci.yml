@@ -28,34 +28,34 @@ jobs:
         run: cargo build --release
 
       - name: "Query: English → rust"
-        run: ./target/release/wikipedia-cli rust
+        run: ./target/release/wikipedia rust
 
       - name: "Query: Simplified Chinese → 大语言模型"
-        run: ./target/release/wikipedia-cli 大语言模型
+        run: ./target/release/wikipedia 大语言模型
 
       - name: "Query: Traditional Chinese → 機器學習"
-        run: ./target/release/wikipedia-cli 機器學習
+        run: ./target/release/wikipedia 機器學習
 
       - name: "Query: Japanese → プログラミング言語"
-        run: ./target/release/wikipedia-cli プログラミング言語
+        run: ./target/release/wikipedia プログラミング言語
 
       - name: "Query: Korean → 인공지능"
-        run: ./target/release/wikipedia-cli 인공지능
+        run: ./target/release/wikipedia 인공지능
 
       - name: "Query: Arabic → الذكاء_الاصطناعي"
-        run: ./target/release/wikipedia-cli الذكاء_الاصطناعي
+        run: ./target/release/wikipedia الذكاء_الاصطناعي
 
       - name: "Query: Russian → Искусственный интеллект"
-        run: ./target/release/wikipedia-cli Искусственный интеллект
+        run: ./target/release/wikipedia Искусственный интеллект
 
       - name: "Query: Hindi → कृत्रिम_बुद्धिमत्ता"
-        run: ./target/release/wikipedia-cli कृत्रिम_बुद्धिमत्ता
+        run: ./target/release/wikipedia कृत्रिम_बुद्धिमत्ता
 
       - name: "Query: Thai → ปัญญาประดิษฐ์"
-        run: ./target/release/wikipedia-cli ปัญญาประดิษฐ์
+        run: ./target/release/wikipedia ปัญญาประดิษฐ์
 
       - name: "Query: Greek → Τεχνητή νοημοσύνη"
-        run: ./target/release/wikipedia-cli Τεχνητή νοημοσύνη
+        run: ./target/release/wikipedia Τεχνητή νοημοσύνη
 
       - name: "Query: Hebrew → בינה מלאכותית"
-        run: ./target/release/wikipedia-cli בינה מלאכותית
+        run: ./target/release/wikipedia בינה מלאכותית
