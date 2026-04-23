@@ -60,6 +60,19 @@ jobs:
       - name: "Long sentence (Japanese)"
         run: ./target/release/wiki "ニューラルネットワークの仕組み"
 
+      # --- Get mode (explicit) ---
+      - name: "Get: --get rust"
+        run: ./target/release/wiki --get rust
+
+      - name: "Get: -g 大语言模型"
+        run: ./target/release/wiki -g 大语言模型
+
+      - name: "Get + JSON: --get --json rust"
+        run: ./target/release/wiki --get --json rust
+
+      - name: "Get + JSON + Lang: -g -j -l zh rust"
+        run: ./target/release/wiki -g -j -l zh rust
+
       # --- Search mode ---
       - name: "Search: rust"
         run: ./target/release/wiki --search rust
@@ -82,3 +95,18 @@ jobs:
 
       - name: "JSON + Search: Linux"
         run: ./target/release/wiki -s -j Linux
+
+      - name: "Search + Lang: -s -l zh rust"
+        run: ./target/release/wiki -s -l zh rust
+
+      - name: "Search + JSON + Lang: -s -j -l ja programming"
+        run: ./target/release/wiki -s -j -l ja programming
+
+      - name: "JSON: mercury (disambiguation)"
+        run: ./target/release/wiki --json mercury
+
+      - name: "Search: プログラミング (Japanese)"
+        run: ./target/release/wiki --search プログラミング
+
+      - name: "Search + JSON: 인공지능 (Korean)"
+        run: ./target/release/wiki -s -j 인공지능
