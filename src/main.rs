@@ -96,14 +96,59 @@ async fn main() {
     if is_disambiguation {
         handle_disambiguation(&client, lang, &variant_param, &title, page).await;
     } else {
-        let title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
+        let page_title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
 
         if extract.is_empty() {
             println!("No article found for '{query}'.");
         } else {
-            println!("--- {title} ---\n");
+            println!("--- {page_title} ---\n");
             println!("{extract}");
+        }
+
+        check_disambiguation_page(&client, lang, &variant_param, &query).await;
+    }
+}
+
+async fn check_disambiguation_page(
+    client: &reqwest::Client,
+    lang: &str,
+    variant_param: &str,
+    query: &str,
+) {
+    let disambig_title = format!("{query} (disambiguation)");
+    let url = format!(
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts|pageprops&explaintext&titles={}&format=json&redirects=1{variant_param}",
+        urlencoding(&disambig_title)
+    );
+
+    let Some(json) = fetch_json(client, &url).await else { return };
+    let Some(pages) = json.get("query").and_then(|q| q.get("pages")).and_then(|p| p.as_object()) else { return };
+
+    let Some(page) = pages.values().next() else { return };
+
+    let is_disambig = page.get("pageprops").and_then(|pp| pp.get("disambiguation")).is_some();
+    if !is_disambig { return }
+
+    let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
+    let suggestions: Vec<&str> = extract
+        .lines()
+        .map(|l| l.trim())
+        .filter(|l| {
+            !l.is_empty()
+                && !l.starts_with("==")
+                && !l.contains("may also refer to")
+                && !l.contains("most commonly refers to")
+                && !l.contains("may refer to")
+                && !l.starts_with("All pages with")
+        })
+        .collect();
+
+    if !suggestions.is_empty() {
+        println!("\n========================================");
+        println!("\"{}\" may also refer to:\n", query);
+        for s in &suggestions {
+            println!("  - {s}");
         }
     }
 }
@@ -113,26 +158,43 @@ async fn handle_disambiguation(
     lang: &str,
     variant_param: &str,
     title: &str,
-    page: &serde_json::Value,
+    _page: &serde_json::Value,
 ) {
-    let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
+    let full_url = format!(
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext&titles={}&format=json&redirects=1{variant_param}",
+        urlencoding(title)
+    );
 
-    let suggestions: Vec<String> = extract
+    let extract = match fetch_json(client, &full_url).await {
+        Some(json) => {
+            json.get("query")
+                .and_then(|q| q.get("pages"))
+                .and_then(|p| p.as_object())
+                .and_then(|pages| pages.values().next())
+                .and_then(|p| p.get("extract"))
+                .and_then(|e| e.as_str())
+                .unwrap_or("")
+                .to_string()
+        }
+        None => String::new(),
+    };
+
+    let suggestions: Vec<&str> = extract
         .lines()
-        .filter(|line| !line.is_empty())
-        .map(|line| line.to_string())
+        .map(|l| l.trim())
+        .filter(|l| {
+            !l.is_empty()
+                && !l.starts_with("==")
+                && !l.contains("may also refer to")
+                && !l.contains("most commonly refers to")
+                && !l.contains("may refer to")
+                && !l.starts_with("All pages with")
+        })
         .collect();
 
     let first_link = suggestions.iter()
         .filter_map(|line| {
-            let trimmed = line.trim();
-            if trimmed.contains("may also refer to")
-                || trimmed.contains("most commonly refers to")
-                || trimmed.is_empty()
-            {
-                return None;
-            }
-            let name = trimmed.split(',').next().unwrap_or(trimmed).trim();
+            let name = line.split(',').next().unwrap_or(line).trim();
             if name.is_empty() || name.len() < 2 {
                 return None;
             }
@@ -164,13 +226,7 @@ async fn handle_disambiguation(
         println!("\n========================================");
         println!("\"{}\" is ambiguous. Did you mean:\n", title);
         for s in &suggestions {
-            let trimmed = s.trim();
-            if !trimmed.is_empty()
-                && !trimmed.contains("may also refer to")
-                && !trimmed.contains("most commonly refers to")
-            {
-                println!("  - {trimmed}");
-            }
+            println!("  - {s}");
         }
     }
 }
