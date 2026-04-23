@@ -75,5 +75,8 @@ jobs:
       - name: "CLI"
         run: ./target/release/wiki cli
 
+      - name: "Anthropic"
+        run: ./target/release/wiki anthropic
+
       - name: "-g -l zh rust"
         run: ./target/release/wiki -g -l zh rust
