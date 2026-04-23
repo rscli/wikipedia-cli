@@ -1,4 +1,5 @@
 use std::env;
+use std::io::Write;
 use std::time::{Duration, Instant};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -67,13 +68,17 @@ async fn main() {
     );
 
     let client = reqwest::Client::builder()
-        .user_agent(format!("wiki/{VERSION}"))
+        .user_agent(concat!("wiki/", env!("CARGO_PKG_VERSION")))
         .timeout(Duration::from_secs(TIMEOUT_SECS))
         .connect_timeout(Duration::from_secs(5))
         .build()
         .expect("Failed to build HTTP client");
 
-    let variant_param = variant.map(|v| format!("&variant={v}")).unwrap_or_default();
+    let variant_param = match variant {
+        Some("zh-cn") => "&variant=zh-cn",
+        Some("zh-tw") => "&variant=zh-tw",
+        _ => "",
+    };
 
     let start = Instant::now();
 
@@ -110,12 +115,7 @@ async fn main() {
         std::process::exit(1);
     };
 
-    let Some(pages) = json.get("query").and_then(|q| q.get("pages")).and_then(|p| p.as_object()) else {
-        eprintln!("No article found for '{query}'.");
-        std::process::exit(1);
-    };
-
-    let Some(page) = pages.values().next() else {
+    let Some(page) = get_first_page(&json) else {
         eprintln!("No article found for '{query}'.");
         std::process::exit(1);
     };
@@ -126,7 +126,7 @@ async fn main() {
         .is_some();
 
     if is_disambiguation {
-        handle_disambiguation(&client, lang, &variant_param, &title, start).await;
+        handle_disambiguation(&client, lang, variant_param, &title, start).await;
     } else {
         let page_title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
@@ -140,7 +140,7 @@ async fn main() {
             print_source_url(lang, page_title);
         }
 
-        check_disambiguation_page(&client, lang, &variant_param, &query).await;
+        check_disambiguation_page(&client, lang, variant_param, &query).await;
     }
 }
 
@@ -154,8 +154,17 @@ fn print_elapsed(start: Instant) {
 }
 
 fn print_source_url(lang: &str, title: &str) {
-    let encoded = title.replace(' ', "_");
-    println!("\nSource: https://{lang}.wikipedia.org/wiki/{encoded}");
+    let out = std::io::stdout();
+    let mut out = out.lock();
+    let _ = write!(out, "\nSource: https://{lang}.wikipedia.org/wiki/");
+    for b in title.bytes() {
+        let _ = out.write_all(if b == b' ' { b"_" } else { std::slice::from_ref(&b) });
+    }
+    let _ = writeln!(out);
+}
+
+fn get_first_page(json: &serde_json::Value) -> Option<&serde_json::Value> {
+    json.get("query")?.get("pages")?.as_object()?.values().next()
 }
 
 fn filter_disambiguation_lines(text: &str) -> Vec<&str> {
@@ -172,17 +181,6 @@ fn filter_disambiguation_lines(text: &str) -> Vec<&str> {
         .collect()
 }
 
-fn fetch_disambiguation_extract(json: &serde_json::Value) -> String {
-    json.get("query")
-        .and_then(|q| q.get("pages"))
-        .and_then(|p| p.as_object())
-        .and_then(|pages| pages.values().next())
-        .and_then(|p| p.get("extract"))
-        .and_then(|e| e.as_str())
-        .unwrap_or("")
-        .to_string()
-}
-
 async fn check_disambiguation_page(
     client: &reqwest::Client,
     lang: &str,
@@ -196,8 +194,7 @@ async fn check_disambiguation_page(
     );
 
     let Some(json) = fetch_json(client, &url).await else { return };
-    let Some(pages) = json.get("query").and_then(|q| q.get("pages")).and_then(|p| p.as_object()) else { return };
-    let Some(page) = pages.values().next() else { return };
+    let Some(page) = get_first_page(&json) else { return };
 
     if page.get("pageprops").and_then(|pp| pp.get("disambiguation")).is_none() { return }
 
@@ -205,10 +202,12 @@ async fn check_disambiguation_page(
     let suggestions = filter_disambiguation_lines(extract);
 
     if !suggestions.is_empty() {
-        println!("\n========================================");
-        println!("\"{}\" may also refer to:\n", query);
+        let out = std::io::stdout();
+        let mut out = out.lock();
+        let _ = writeln!(out, "\n========================================");
+        let _ = writeln!(out, "\"{}\" may also refer to:\n", query);
         for s in &suggestions {
-            println!("  - {s}");
+            let _ = writeln!(out, "  - {s}");
         }
     }
 }
@@ -226,7 +225,11 @@ async fn handle_disambiguation(
     );
 
     let extract = match fetch_json(client, &full_url).await {
-        Some(json) => fetch_disambiguation_extract(&json),
+        Some(json) => get_first_page(&json)
+            .and_then(|p| p.get("extract"))
+            .and_then(|e| e.as_str())
+            .unwrap_or("")
+            .to_string(),
         None => String::new(),
     };
 
@@ -235,36 +238,36 @@ async fn handle_disambiguation(
     let first_link = suggestions.iter()
         .find_map(|line| {
             let name = line.split(',').next().unwrap_or(line).trim();
-            if name.len() >= 2 { Some(name.to_string()) } else { None }
+            if name.len() >= 2 { Some(name) } else { None }
         });
 
-    if let Some(ref first) = first_link {
+    if let Some(first) = first_link {
         let url = format!(
             "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles={}&format=json&redirects=1{variant_param}",
             urlencoding(first)
         );
 
         if let Some(json) = fetch_json(client, &url).await {
-            if let Some(pages) = json.get("query").and_then(|q| q.get("pages")).and_then(|p| p.as_object()) {
-                if let Some(p) = pages.values().next() {
-                    let t = p.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
-                    let ext = p.get("extract").and_then(|e| e.as_str()).unwrap_or("");
-                    if !ext.is_empty() {
-                        println!("--- {t} ---\n");
-                        println!("{ext}");
-                        print_elapsed(start);
-                        print_source_url(lang, t);
-                    }
+            if let Some(p) = get_first_page(&json) {
+                let t = p.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
+                let ext = p.get("extract").and_then(|e| e.as_str()).unwrap_or("");
+                if !ext.is_empty() {
+                    println!("--- {t} ---\n");
+                    println!("{ext}");
+                    print_elapsed(start);
+                    print_source_url(lang, t);
                 }
             }
         }
     }
 
     if !suggestions.is_empty() {
-        println!("\n========================================");
-        println!("\"{}\" is ambiguous. Did you mean:\n", title);
+        let out = std::io::stdout();
+        let mut out = out.lock();
+        let _ = writeln!(out, "\n========================================");
+        let _ = writeln!(out, "\"{}\" is ambiguous. Did you mean:\n", title);
         for s in &suggestions {
-            println!("  - {s}");
+            let _ = writeln!(out, "  - {s}");
         }
     }
 }
@@ -416,15 +419,14 @@ async fn fetch_json(client: &reqwest::Client, url: &str) -> Option<serde_json::V
 const HEX: &[u8; 16] = b"0123456789ABCDEF";
 
 fn urlencoding(s: &str) -> String {
-    let mut buf = [0u8; 4];
     let mut result = String::with_capacity(s.len() * 2);
-    for c in s.chars() {
-        if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.' | '~') {
-            result.push(c);
-        } else if c == ' ' {
-            result.push('+');
-        } else {
-            for &b in c.encode_utf8(&mut buf).as_bytes() {
+    for &b in s.as_bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                result.push(b as char);
+            }
+            b' ' => result.push('+'),
+            _ => {
                 result.push('%');
                 result.push(HEX[(b >> 4) as usize] as char);
                 result.push(HEX[(b & 0x0F) as usize] as char);
