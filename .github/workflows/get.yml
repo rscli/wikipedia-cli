@@ -69,5 +69,8 @@ jobs:
       - name: "Cargo"
         run: ./target/release/wiki cargo
 
+      - name: "TikTok"
+        run: ./target/release/wiki tiktok
+
       - name: "-g -l zh rust"
         run: ./target/release/wiki -g -l zh rust
