@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const TIMEOUT_SECS: u64 = 10;
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
 
@@ -13,14 +13,14 @@ async fn main() {
         std::process::exit(1);
     }
 
-    let mut forced_lang: Option<String> = None;
-    let mut query_parts: Vec<String> = Vec::new();
+    let mut forced_lang: Option<&str> = None;
+    let mut query_parts: Vec<&str> = Vec::new();
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
             "-l" | "--lang" => {
                 if i + 1 < args.len() {
-                    forced_lang = Some(args[i + 1].clone());
+                    forced_lang = Some(&args[i + 1]);
                     i += 2;
                 } else {
                     eprintln!("Error: -l requires a language code (e.g. zh, ja, ko, en)");
@@ -36,7 +36,7 @@ async fn main() {
                 return;
             }
             other => {
-                query_parts.push(other.to_string());
+                query_parts.push(other);
                 i += 1;
             }
         }
@@ -49,13 +49,13 @@ async fn main() {
     }
 
     let (detected_lang, detected_variant) = detect_language(&query);
-    let (lang, variant): (&str, Option<&str>) = if let Some(ref l) = forced_lang {
-        let variant = match l.as_str() {
+    let (lang, variant): (&str, Option<&str>) = if let Some(l) = forced_lang {
+        let variant = match l {
             "zh-cn" | "zh-hans" => Some("zh-cn"),
             "zh-tw" | "zh-hant" => Some("zh-tw"),
             _ => None,
         };
-        if l.starts_with("zh") { ("zh", variant) } else { (l.as_str(), variant) }
+        if l.starts_with("zh") { ("zh", variant) } else { (l, variant) }
     } else {
         (detected_lang, detected_variant)
     };
@@ -67,7 +67,7 @@ async fn main() {
     );
 
     let client = reqwest::Client::builder()
-        .user_agent("wiki/0.1.0")
+        .user_agent(format!("wiki/{VERSION}"))
         .timeout(Duration::from_secs(TIMEOUT_SECS))
         .connect_timeout(Duration::from_secs(5))
         .build()
