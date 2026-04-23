@@ -6,6 +6,8 @@ description = "Query Wikipedia from the command line with automatic language det
 repository = "https://github.com/rustq/wikipedia-cli"
 license = "MIT"
 keywords = ["wikipedia", "cli", "search"]
+categories = ["command-line-utilities"]
+rust-version = "1.70"
 
 [[bin]]
 name = "wiki"

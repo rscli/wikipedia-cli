@@ -15,16 +15,21 @@ struct Theme {
 }
 
 const COLOR: Theme = Theme {
-    title:  "\x1b[1;32m",
-    dim:    "\x1b[2m",
-    url:    "\x1b[36m",
-    warn:   "\x1b[33m",
+    title: "\x1b[1;32m",
+    dim: "\x1b[2m",
+    url: "\x1b[36m",
+    warn: "\x1b[33m",
     bullet: "\x1b[33m",
-    reset:  "\x1b[0m",
+    reset: "\x1b[0m",
 };
 
 const PLAIN: Theme = Theme {
-    title: "", dim: "", url: "", warn: "", bullet: "", reset: "",
+    title: "",
+    dim: "",
+    url: "",
+    warn: "",
+    bullet: "",
+    reset: "",
 };
 
 #[tokio::main(flavor = "current_thread")]
@@ -52,9 +57,17 @@ async fn main() {
                     std::process::exit(1);
                 }
             }
-            "-g" | "--get" => { i += 1; }
-            "-s" | "--search" => { search_mode = true; i += 1; }
-            "-j" | "--json" => { json_mode = true; i += 1; }
+            "-g" | "--get" => {
+                i += 1;
+            }
+            "-s" | "--search" => {
+                search_mode = true;
+                i += 1;
+            }
+            "-j" | "--json" => {
+                json_mode = true;
+                i += 1;
+            }
             "-h" | "--help" => {
                 print_help();
                 return;
@@ -83,20 +96,34 @@ async fn main() {
             "zh-tw" | "zh-hant" => Some("zh-tw"),
             _ => None,
         };
-        if l.starts_with("zh") { ("zh", variant) } else { (l, variant) }
+        if l.starts_with("zh") {
+            ("zh", variant)
+        } else {
+            (l, variant)
+        }
     } else {
         (detected_lang, detected_variant)
     };
 
     if !json_mode {
-        let mode = if forced_lang.is_some() { "manual" } else { "auto" };
+        let mode = if forced_lang.is_some() {
+            "manual"
+        } else {
+            "auto"
+        };
         match variant {
             Some(v) => eprintln!("[wiki] language: {lang}, variant: {v} ({mode})"),
             None => eprintln!("[wiki] language: {lang} ({mode})"),
         };
     }
 
-    let t = if json_mode { &PLAIN } else if std::io::stdout().is_terminal() { &COLOR } else { &PLAIN };
+    let t = if json_mode {
+        &PLAIN
+    } else if std::io::stdout().is_terminal() {
+        &COLOR
+    } else {
+        &PLAIN
+    };
 
     let client = reqwest::Client::builder()
         .user_agent(concat!("wiki/", env!("CARGO_PKG_VERSION")))
@@ -124,18 +151,27 @@ async fn main() {
     );
 
     let Some(json) = fetch_json(&client, &url).await else {
-        if json_mode { println!("{{\"error\":\"No results found\"}}"); }
-        else { eprintln!("No results found for '{query}'."); }
+        if json_mode {
+            println!("{{\"error\":\"No results found\"}}");
+        } else {
+            eprintln!("No results found for '{query}'.");
+        }
         std::process::exit(1);
     };
 
     let Some(page) = get_first_page(&json) else {
-        if json_mode { println!("{{\"error\":\"No results found\"}}"); }
-        else { eprintln!("No results found for '{query}'."); }
+        if json_mode {
+            println!("{{\"error\":\"No results found\"}}");
+        } else {
+            eprintln!("No results found for '{query}'.");
+        }
         std::process::exit(1);
     };
 
-    let title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
+    let title = page
+        .get("title")
+        .and_then(|t| t.as_str())
+        .unwrap_or("Unknown");
     let is_disambiguation = page
         .get("pageprops")
         .and_then(|pp| pp.get("disambiguation"))
@@ -147,8 +183,11 @@ async fn main() {
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
 
         if extract.is_empty() {
-            if json_mode { println!("{{\"error\":\"No article found\"}}"); }
-            else { println!("No article found for '{query}'."); }
+            if json_mode {
+                println!("{{\"error\":\"No article found\"}}");
+            } else {
+                println!("No article found for '{query}'.");
+            }
         } else if json_mode {
             print_json_article(lang, title, extract, start);
         } else {
@@ -163,20 +202,28 @@ async fn main() {
 }
 
 fn display_width(s: &str) -> usize {
-    s.chars().map(|c| {
-        match c as u32 {
-            0x1100..=0x115F | 0x2E80..=0x303E | 0x3040..=0x33BF |
-            0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xA000..=0xA4CF |
-            0xAC00..=0xD7AF | 0xF900..=0xFAFF | 0xFE30..=0xFE6F |
-            0xFF01..=0xFF60 | 0xFFE0..=0xFFE6 | 0x20000..=0x2FA1F => 2,
+    s.chars()
+        .map(|c| match c as u32 {
+            0x1100..=0x115F
+            | 0x2E80..=0x303E
+            | 0x3040..=0x33BF
+            | 0x3400..=0x4DBF
+            | 0x4E00..=0x9FFF
+            | 0xA000..=0xA4CF
+            | 0xAC00..=0xD7AF
+            | 0xF900..=0xFAFF
+            | 0xFE30..=0xFE6F
+            | 0xFF01..=0xFF60
+            | 0xFFE0..=0xFFE6
+            | 0x20000..=0x2FA1F => 2,
             _ => 1,
-        }
-    }).sum()
+        })
+        .sum()
 }
 
 fn print_article(t: &Theme, title: &str, extract: &str) {
     let bar = "─".repeat(display_width(title) + 2);
-    println!("{}┌─ {} {}{}",  t.title, title, bar, t.reset);
+    println!("{}┌─ {} {}{}", t.title, title, bar, t.reset);
     println!();
     println!("{extract}");
 }
@@ -190,9 +237,17 @@ fn print_footer(t: &Theme, start: Instant, lang: &str, title: &str) {
     };
     let out = std::io::stdout();
     let mut out = out.lock();
-    let _ = write!(out, "\n{}└─ {time} {}{} · {}https://{lang}.wikipedia.org/wiki/", t.dim, t.reset, t.dim, t.url);
+    let _ = write!(
+        out,
+        "\n{}└─ {time} {}{} · {}https://{lang}.wikipedia.org/wiki/",
+        t.dim, t.reset, t.dim, t.url
+    );
     for b in title.bytes() {
-        let _ = out.write_all(if b == b' ' { b"_" } else { std::slice::from_ref(&b) });
+        let _ = out.write_all(if b == b' ' {
+            b"_"
+        } else {
+            std::slice::from_ref(&b)
+        });
     }
     let _ = writeln!(out, "{}", t.reset);
 }
@@ -200,16 +255,34 @@ fn print_footer(t: &Theme, start: Instant, lang: &str, title: &str) {
 fn disambig_labels(lang: &str) -> (&'static str, &'static str) {
     match lang {
         "zh" => ("也可以指：", "是一个消歧义词条。您是否在找："),
-        "ja" => ("は以下を指す場合もあります：", "は曖昧さ回避です。もしかして："),
-        "ko" => ("은(는) 다음을 가리킬 수도 있습니다:", "은(는) 동음이의어입니다. 찾으시는 것은:"),
+        "ja" => (
+            "は以下を指す場合もあります：",
+            "は曖昧さ回避です。もしかして：",
+        ),
+        "ko" => (
+            "은(는) 다음을 가리킬 수도 있습니다:",
+            "은(는) 동음이의어입니다. 찾으시는 것은:",
+        ),
         "ar" => ("قد تشير أيضًا إلى:", "صفحة توضيح. هل تقصد:"),
-        "ru" => ("может также означать:", "— страница значений. Возможно, вы имели в виду:"),
+        "ru" => (
+            "может также означать:",
+            "— страница значений. Возможно, вы имели в виду:",
+        ),
         "hi" => ("यह भी हो सकता है:", "एक बहुविकल्पी पृष्ठ है। क्या आप ढूंढ रहे हैं:"),
         "th" => ("อาจหมายถึง:", "เป็นหน้าแก้ความกำกวม คุณหมายถึง:"),
         "he" => (":עשוי גם להתייחס ל", ":דף פירושונים. האם התכוונת ל"),
-        "el" => ("μπορεί επίσης να αναφέρεται σε:", "είναι σελίδα αποσαφήνισης. Εννοούσατε:"),
-        "vi" => ("cũng có thể là:", "là trang định hướng. Có phải bạn muốn tìm:"),
-        "tr" => ("ayrıca şu anlamlara gelebilir:", "bir anlam ayrımı sayfasıdır. Aradığınız:"),
+        "el" => (
+            "μπορεί επίσης να αναφέρεται σε:",
+            "είναι σελίδα αποσαφήνισης. Εννοούσατε:",
+        ),
+        "vi" => (
+            "cũng có thể là:",
+            "là trang định hướng. Có phải bạn muốn tìm:",
+        ),
+        "tr" => (
+            "ayrıca şu anlamlara gelebilir:",
+            "bir anlam ayrımı sayfasıdır. Aradığınız:",
+        ),
         _ => ("may also refer to:", "is ambiguous. Did you mean:"),
     }
 }
@@ -217,7 +290,11 @@ fn disambig_labels(lang: &str) -> (&'static str, &'static str) {
 fn print_disambig(t: &Theme, header: &str, query: &str, suggestions: &[&str]) {
     let out = std::io::stdout();
     let mut out = out.lock();
-    let _ = writeln!(out, "\n{}════════════════════════════════════════{}", t.dim, t.reset);
+    let _ = writeln!(
+        out,
+        "\n{}════════════════════════════════════════{}",
+        t.dim, t.reset
+    );
     let _ = writeln!(out, "{}\"{}\" {}{}", t.warn, query, header, t.reset);
     let _ = writeln!(out);
     for s in suggestions {
@@ -233,7 +310,10 @@ fn print_json(obj: &serde_json::Value) {
 }
 
 fn print_json_article(lang: &str, title: &str, extract: &str, start: Instant) {
-    let url = format!("https://{lang}.wikipedia.org/wiki/{}", title.replace(' ', "_"));
+    let url = format!(
+        "https://{lang}.wikipedia.org/wiki/{}",
+        title.replace(' ', "_")
+    );
     let obj = serde_json::json!({
         "title": title,
         "extract": extract,
@@ -259,29 +339,42 @@ async fn do_search(
     );
 
     let Some(json) = fetch_json(client, &url).await else {
-        if json_mode { println!("[]"); }
-        else { eprintln!("No results found for '{query}'."); }
+        if json_mode {
+            println!("[]");
+        } else {
+            eprintln!("No results found for '{query}'.");
+        }
         return;
     };
 
-    let results = json.get("query")
+    let results = json
+        .get("query")
         .and_then(|q| q.get("search"))
         .and_then(|s| s.as_array());
 
     let Some(results) = results else {
-        if json_mode { println!("[]"); }
-        else { eprintln!("No results found for '{query}'."); }
+        if json_mode {
+            println!("[]");
+        } else {
+            eprintln!("No results found for '{query}'.");
+        }
         return;
     };
 
     if json_mode {
-        let items: Vec<serde_json::Value> = results.iter().map(|r| {
-            let title = r.get("title").and_then(|t| t.as_str()).unwrap_or("");
-            let snippet = r.get("snippet").and_then(|s| s.as_str()).unwrap_or("");
-            let snippet = strip_html_tags(snippet);
-            let url = format!("https://{lang}.wikipedia.org/wiki/{}", title.replace(' ', "_"));
-            serde_json::json!({ "title": title, "snippet": snippet, "url": url })
-        }).collect();
+        let items: Vec<serde_json::Value> = results
+            .iter()
+            .map(|r| {
+                let title = r.get("title").and_then(|t| t.as_str()).unwrap_or("");
+                let snippet = r.get("snippet").and_then(|s| s.as_str()).unwrap_or("");
+                let snippet = strip_html_tags(snippet);
+                let url = format!(
+                    "https://{lang}.wikipedia.org/wiki/{}",
+                    title.replace(' ', "_")
+                );
+                serde_json::json!({ "title": title, "snippet": snippet, "url": url })
+            })
+            .collect();
         let obj = serde_json::json!({
             "query": query,
             "language": lang,
@@ -291,13 +384,21 @@ async fn do_search(
         print_json(&obj);
     } else {
         let bar = "─".repeat(display_width(query) + 12);
-        println!("{}┌─ search: {} {}{}",  t.title, query, bar, t.reset);
+        println!("{}┌─ search: {} {}{}", t.title, query, bar, t.reset);
         println!();
         for (i, r) in results.iter().enumerate() {
             let title = r.get("title").and_then(|t| t.as_str()).unwrap_or("");
             let snippet = r.get("snippet").and_then(|s| s.as_str()).unwrap_or("");
             let snippet = strip_html_tags(snippet);
-            println!("  {}▸{} {}[{}]{} {}", t.bullet, t.reset, t.title, i + 1, t.reset, title);
+            println!(
+                "  {}▸{} {}[{}]{} {}",
+                t.bullet,
+                t.reset,
+                t.title,
+                i + 1,
+                t.reset,
+                title
+            );
             if !snippet.is_empty() {
                 println!("    {}{}{}", t.dim, snippet, t.reset);
             }
@@ -308,7 +409,12 @@ async fn do_search(
         } else {
             format!("{}ms", elapsed.as_millis())
         };
-        println!("\n{}└─ {} results · {time}{}", t.dim, results.len(), t.reset);
+        println!(
+            "\n{}└─ {} results · {time}{}",
+            t.dim,
+            results.len(),
+            t.reset
+        );
     }
 }
 
@@ -327,7 +433,11 @@ fn strip_html_tags(s: &str) -> String {
 }
 
 fn get_first_page(json: &serde_json::Value) -> Option<&serde_json::Value> {
-    json.get("query")?.get("pages")?.as_object()?.values().next()
+    json.get("query")?
+        .get("pages")?
+        .as_object()?
+        .values()
+        .next()
 }
 
 fn filter_disambiguation_lines(text: &str) -> Vec<&str> {
@@ -357,10 +467,20 @@ async fn check_disambiguation_page(
         urlencoding(&disambig_title)
     );
 
-    let Some(json) = fetch_json(client, &url).await else { return };
-    let Some(page) = get_first_page(&json) else { return };
+    let Some(json) = fetch_json(client, &url).await else {
+        return;
+    };
+    let Some(page) = get_first_page(&json) else {
+        return;
+    };
 
-    if page.get("pageprops").and_then(|pp| pp.get("disambiguation")).is_none() { return }
+    if page
+        .get("pageprops")
+        .and_then(|pp| pp.get("disambiguation"))
+        .is_none()
+    {
+        return;
+    }
 
     let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
     let suggestions = filter_disambiguation_lines(extract);
@@ -396,11 +516,14 @@ async fn handle_disambiguation(
 
     let suggestions = filter_disambiguation_lines(&extract);
 
-    let first_link = suggestions.iter()
-        .find_map(|line| {
-            let name = line.split(',').next().unwrap_or(line).trim();
-            if name.len() >= 2 { Some(name) } else { None }
-        });
+    let first_link = suggestions.iter().find_map(|line| {
+        let name = line.split(',').next().unwrap_or(line).trim();
+        if name.len() >= 2 {
+            Some(name)
+        } else {
+            None
+        }
+    });
 
     if json_mode {
         let mut first_extract = String::new();
@@ -413,8 +536,16 @@ async fn handle_disambiguation(
             );
             if let Some(json) = fetch_json(client, &url).await {
                 if let Some(p) = get_first_page(&json) {
-                    first_title = p.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string();
-                    first_extract = p.get("extract").and_then(|e| e.as_str()).unwrap_or("").to_string();
+                    first_title = p
+                        .get("title")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    first_extract = p
+                        .get("extract")
+                        .and_then(|e| e.as_str())
+                        .unwrap_or("")
+                        .to_string();
                 }
             }
         }
@@ -454,7 +585,8 @@ async fn handle_disambiguation(
 }
 
 fn print_help() {
-    print!("\
+    print!(
+        "\
 wiki {VERSION}
 Query Wikipedia from the command line with automatic language detection.
 
@@ -482,7 +614,8 @@ SUPPORTED LANGUAGES:
     Auto-detected by script: English, Chinese (Simplified/Traditional),
     Japanese, Korean, Arabic, Russian, Hindi, Thai, Hebrew, Greek,
     Tamil, Bengali, Telugu, Turkish, Vietnamese
-");
+"
+    );
 }
 
 fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
@@ -538,8 +671,12 @@ fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
         }
     }
 
-    if japanese_score > 0 { return ("ja", None); }
-    if korean_score > 0 { return ("ko", None); }
+    if japanese_score > 0 {
+        return ("ja", None);
+    }
+    if korean_score > 0 {
+        return ("ko", None);
+    }
 
     if cjk_score > 0 {
         return if traditional_score > simplified_score {
@@ -550,13 +687,24 @@ fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
     }
 
     let scores: [_; 11] = [
-        (arabic_score, "ar"), (cyrillic_score, "ru"), (devanagari_score, "hi"),
-        (thai_score, "th"), (hebrew_score, "he"), (greek_score, "el"),
-        (tamil_score, "ta"), (bengali_score, "bn"), (telugu_score, "te"),
-        (turkish_score, "tr"), (vietnamese_score, "vi"),
+        (arabic_score, "ar"),
+        (cyrillic_score, "ru"),
+        (devanagari_score, "hi"),
+        (thai_score, "th"),
+        (hebrew_score, "he"),
+        (greek_score, "el"),
+        (tamil_score, "ta"),
+        (bengali_score, "bn"),
+        (telugu_score, "te"),
+        (turkish_score, "tr"),
+        (vietnamese_score, "vi"),
     ];
 
-    if let Some((_, lang)) = scores.iter().filter(|(s, _)| *s > 0).max_by_key(|(s, _)| *s) {
+    if let Some((_, lang)) = scores
+        .iter()
+        .filter(|(s, _)| *s > 0)
+        .max_by_key(|(s, _)| *s)
+    {
         return (lang, None);
     }
 
@@ -564,22 +712,110 @@ fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
 }
 
 fn is_simplified_indicator(c: char) -> bool {
-    matches!(c,
-        '么' | '个' | '们' | '这' | '国' | '对' | '说' | '时' | '会' | '学' |
-        '将' | '从' | '还' | '进' | '过' | '动' | '与' | '长' | '发' | '开' |
-        '问' | '关' | '没' | '车' | '让' | '经' | '头' | '点' | '运' | '实' |
-        '东' | '业' | '变' | '节' | '万' | '达' | '岁' | '华' | '写' | '号' |
-        '厂' | '币' | '飞' | '机' | '尽' | '脑' | '冲' | '齐' | '网' | '讯'
+    matches!(
+        c,
+        '么' | '个'
+            | '们'
+            | '这'
+            | '国'
+            | '对'
+            | '说'
+            | '时'
+            | '会'
+            | '学'
+            | '将'
+            | '从'
+            | '还'
+            | '进'
+            | '过'
+            | '动'
+            | '与'
+            | '长'
+            | '发'
+            | '开'
+            | '问'
+            | '关'
+            | '没'
+            | '车'
+            | '让'
+            | '经'
+            | '头'
+            | '点'
+            | '运'
+            | '实'
+            | '东'
+            | '业'
+            | '变'
+            | '节'
+            | '万'
+            | '达'
+            | '岁'
+            | '华'
+            | '写'
+            | '号'
+            | '厂'
+            | '币'
+            | '飞'
+            | '机'
+            | '尽'
+            | '脑'
+            | '冲'
+            | '齐'
+            | '网'
+            | '讯'
     )
 }
 
 fn is_traditional_indicator(c: char) -> bool {
-    matches!(c,
-        '們' | '這' | '國' | '對' | '說' | '時' | '會' | '學' | '將' | '從' |
-        '還' | '進' | '過' | '動' | '與' | '長' | '發' | '開' | '問' | '關' |
-        '沒' | '車' | '讓' | '經' | '頭' | '點' | '運' | '實' | '東' | '業' |
-        '變' | '節' | '萬' | '達' | '歲' | '華' | '寫' | '號' | '廠' | '幣' |
-        '飛' | '機' | '盡' | '腦' | '衝' | '齊' | '網' | '訊'
+    matches!(
+        c,
+        '們' | '這'
+            | '國'
+            | '對'
+            | '說'
+            | '時'
+            | '會'
+            | '學'
+            | '將'
+            | '從'
+            | '還'
+            | '進'
+            | '過'
+            | '動'
+            | '與'
+            | '長'
+            | '發'
+            | '開'
+            | '問'
+            | '關'
+            | '沒'
+            | '車'
+            | '讓'
+            | '經'
+            | '頭'
+            | '點'
+            | '運'
+            | '實'
+            | '東'
+            | '業'
+            | '變'
+            | '節'
+            | '萬'
+            | '達'
+            | '歲'
+            | '華'
+            | '寫'
+            | '號'
+            | '廠'
+            | '幣'
+            | '飛'
+            | '機'
+            | '盡'
+            | '腦'
+            | '衝'
+            | '齊'
+            | '網'
+            | '訊'
     )
 }
 
