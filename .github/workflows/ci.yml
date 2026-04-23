@@ -59,3 +59,6 @@ jobs:
 
       - name: "Query: Hebrew → בינה מלאכותית"
         run: ./target/release/wikipedia בינה מלאכותית
+
+      - name: "Query: Disambiguation → mercury"
+        run: ./target/release/wikipedia mercury
