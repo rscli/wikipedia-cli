@@ -83,11 +83,11 @@ async fn main() {
         (detected_lang, detected_variant)
     };
 
-    eprintln!(
-        "[wiki] language: {lang}{}{}",
-        variant.map(|v| format!(", variant: {v}")).unwrap_or_default(),
-        if forced_lang.is_some() { " (manual)" } else { " (auto)" }
-    );
+    let mode = if forced_lang.is_some() { "manual" } else { "auto" };
+    match variant {
+        Some(v) => eprintln!("[wiki] language: {lang}, variant: {v} ({mode})"),
+        None => eprintln!("[wiki] language: {lang} ({mode})"),
+    };
 
     let t = if std::io::stdout().is_terminal() { &COLOR } else { &PLAIN };
 
@@ -106,68 +106,57 @@ async fn main() {
 
     let start = Instant::now();
 
-    let search_url = format!(
-        "https://{lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch={}&srlimit=1&format=json{variant_param}",
+    let url = format!(
+        "https://{lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={}&gsrlimit=1&prop=extracts|pageprops&exintro&explaintext&format=json&redirects=1{variant_param}",
         urlencoding(&query)
     );
 
-    let title = match fetch_json(&client, &search_url).await {
-        Some(json) => {
-            json.get("query")
-                .and_then(|q| q.get("search"))
-                .and_then(|s| s.as_array())
-                .and_then(|arr| arr.first())
-                .and_then(|item| item.get("title"))
-                .and_then(|t| t.as_str())
-                .map(|s| s.to_string())
-        }
-        None => None,
-    };
-
-    let Some(title) = title else {
+    let Some(json) = fetch_json(&client, &url).await else {
         eprintln!("No results found for '{query}'.");
         std::process::exit(1);
     };
 
-    let extract_url = format!(
-        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts|pageprops&exintro&explaintext&titles={}&format=json&redirects=1{variant_param}",
-        urlencoding(&title)
-    );
-
-    let Some(json) = fetch_json(&client, &extract_url).await else {
-        eprintln!("Failed to fetch article.");
-        std::process::exit(1);
-    };
-
     let Some(page) = get_first_page(&json) else {
-        eprintln!("No article found for '{query}'.");
+        eprintln!("No results found for '{query}'.");
         std::process::exit(1);
     };
 
+    let title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
     let is_disambiguation = page
         .get("pageprops")
         .and_then(|pp| pp.get("disambiguation"))
         .is_some();
 
     if is_disambiguation {
-        handle_disambiguation(&client, lang, variant_param, &title, start, t).await;
+        handle_disambiguation(&client, lang, variant_param, title, start, t).await;
     } else {
-        let page_title = page.get("title").and_then(|t| t.as_str()).unwrap_or("Unknown");
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
 
         if extract.is_empty() {
             println!("No article found for '{query}'.");
         } else {
-            print_article(t, page_title, extract);
-            print_footer(t, start, lang, page_title);
+            print_article(t, title, extract);
+            print_footer(t, start, lang, title);
         }
 
         check_disambiguation_page(&client, lang, variant_param, &query, t).await;
     }
 }
 
+fn display_width(s: &str) -> usize {
+    s.chars().map(|c| {
+        match c as u32 {
+            0x1100..=0x115F | 0x2E80..=0x303E | 0x3040..=0x33BF |
+            0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xA000..=0xA4CF |
+            0xAC00..=0xD7AF | 0xF900..=0xFAFF | 0xFE30..=0xFE6F |
+            0xFF01..=0xFF60 | 0xFFE0..=0xFFE6 | 0x20000..=0x2FA1F => 2,
+            _ => 1,
+        }
+    }).sum()
+}
+
 fn print_article(t: &Theme, title: &str, extract: &str) {
-    let bar = "─".repeat(title.len() + 2);
+    let bar = "─".repeat(display_width(title) + 2);
     println!("{}┌─ {} {}{}",  t.title, title, bar, t.reset);
     println!();
     println!("{extract}");
