@@ -225,17 +225,23 @@ fn print_disambig(t: &Theme, header: &str, query: &str, suggestions: &[&str]) {
     }
 }
 
+fn print_json(obj: &serde_json::Value) {
+    let out = std::io::stdout();
+    let mut out = out.lock();
+    let _ = serde_json::to_writer_pretty(&mut out, obj);
+    let _ = writeln!(out);
+}
+
 fn print_json_article(lang: &str, title: &str, extract: &str, start: Instant) {
     let url = format!("https://{lang}.wikipedia.org/wiki/{}", title.replace(' ', "_"));
-    let ms = start.elapsed().as_millis();
     let obj = serde_json::json!({
         "title": title,
         "extract": extract,
         "url": url,
         "language": lang,
-        "time_ms": ms,
+        "time_ms": start.elapsed().as_millis() as u64,
     });
-    println!("{}", serde_json::to_string_pretty(&obj).unwrap_or_default());
+    print_json(&obj);
 }
 
 async fn do_search(
@@ -282,7 +288,7 @@ async fn do_search(
             "time_ms": start.elapsed().as_millis() as u64,
             "results": items,
         });
-        println!("{}", serde_json::to_string_pretty(&obj).unwrap_or_default());
+        print_json(&obj);
     } else {
         let bar = "─".repeat(display_width(query) + 12);
         println!("{}┌─ search: {} {}{}",  t.title, query, bar, t.reset);
@@ -397,7 +403,6 @@ async fn handle_disambiguation(
         });
 
     if json_mode {
-        let sugg_strs: Vec<&str> = suggestions.to_vec();
         let mut first_extract = String::new();
         let mut first_title = String::new();
 
@@ -418,11 +423,11 @@ async fn handle_disambiguation(
             "disambiguation": true,
             "query": title,
             "primary": { "title": first_title, "extract": first_extract },
-            "suggestions": sugg_strs,
+            "suggestions": suggestions,
             "language": lang,
             "time_ms": start.elapsed().as_millis() as u64,
         });
-        println!("{}", serde_json::to_string_pretty(&obj).unwrap_or_default());
+        print_json(&obj);
     } else {
         if let Some(first) = first_link {
             let url = format!(
