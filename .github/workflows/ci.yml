@@ -101,3 +101,12 @@ jobs:
 
       - name: "Query: -l ja rust (force Japanese)"
         run: ./target/release/wk -l ja rust
+
+      - name: "Query: Long sentence (English)"
+        run: ./target/release/wk "the history of artificial intelligence"
+
+      - name: "Query: Long sentence (Chinese)"
+        run: ./target/release/wk "量子计算机的工作原理是什么"
+
+      - name: "Query: Long sentence (Japanese)"
+        run: ./target/release/wk "ニューラルネットワークの仕組み"
