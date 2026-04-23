@@ -1,6 +1,8 @@
 use std::env;
+use std::time::Duration;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+const TIMEOUT_SECS: u64 = 10;
 
 #[tokio::main]
 async fn main() {
@@ -75,7 +77,9 @@ async fn main() {
     eprintln!("[wk] language: {lang}{}{}", variant.map(|v| format!(", variant: {v}")).unwrap_or_default(), if forced_lang.is_some() { " (manual)" } else { " (auto)" });
 
     let client = reqwest::Client::builder()
-        .user_agent("wikipedia-cli/0.1.0")
+        .user_agent("wk/0.1.0")
+        .timeout(Duration::from_secs(TIMEOUT_SECS))
+        .connect_timeout(Duration::from_secs(5))
         .build()
         .expect("Failed to build HTTP client");
 
@@ -422,7 +426,18 @@ fn is_traditional_indicator(c: char) -> bool {
 }
 
 async fn fetch_json(client: &reqwest::Client, url: &str) -> Option<serde_json::Value> {
-    let resp = client.get(url).send().await.ok()?;
+    let resp = match client.get(url).send().await {
+        Ok(r) => r,
+        Err(e) if e.is_timeout() => {
+            eprintln!("[wk] Error: request timed out after {TIMEOUT_SECS}s. Please check your network and try again.");
+            std::process::exit(1);
+        }
+        Err(e) if e.is_connect() => {
+            eprintln!("[wk] Error: connection failed. Please check your network.");
+            std::process::exit(1);
+        }
+        Err(_) => return None,
+    };
     let text = resp.text().await.ok()?;
     serde_json::from_str(&text).ok()
 }
