@@ -19,14 +19,14 @@ Rust is an iron oxide, a usually reddish-brown oxide formed by the reaction of i
 ## Install
 
 ```bash
-cargo install --git https://github.com/rustq/wiki
+cargo install --git https://github.com/rustq/wiki-cli
 ```
 
 Or build from source:
 
 ```bash
-git clone https://github.com/rustq/wiki.git
-cd wiki
+git clone https://github.com/rustq/wiki-cli.git
+cd wiki-cli
 cargo build --release
 # Binary at ./target/release/wiki
 ```
