@@ -11,6 +11,12 @@ keywords = ["wikipedia", "cli", "search"]
 name = "wiki"
 path = "src/main.rs"
 
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+opt-level = "z"
+
 [dependencies]
 reqwest = { version = "0.12", default-features = false, features = ["default-tls"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

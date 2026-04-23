@@ -249,26 +249,32 @@ async fn handle_disambiguation(
 }
 
 fn print_help() {
-    println!("wiki {VERSION}");
-    println!("Query Wikipedia from the command line with automatic language detection.\n");
-    println!("USAGE:");
-    println!("    wiki <query>\n");
-    println!("OPTIONS:");
-    println!("    -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)");
-    println!("    -h, --help         Print help information");
-    println!("    -V, --version      Print version information\n");
-    println!("EXAMPLES:");
-    println!("    wiki rust");
-    println!("    wiki 大语言模型");
-    println!("    wiki プログラミング言語");
-    println!("    wiki 인공지능");
-    println!("    wiki -l zh rust              # query 'rust' on Chinese Wikipedia");
-    println!("    wiki -l ja programming       # query 'programming' on Japanese Wikipedia");
-    println!("    wiki -l zh-tw machine learning  # query in Traditional Chinese\n");
-    println!("SUPPORTED LANGUAGES:");
-    println!("    Auto-detected by script: English, Chinese (Simplified/Traditional),");
-    println!("    Japanese, Korean, Arabic, Russian, Hindi, Thai, Hebrew, Greek,");
-    println!("    Tamil, Bengali, Telugu, Turkish, Vietnamese");
+    print!("\
+wiki {VERSION}
+Query Wikipedia from the command line with automatic language detection.
+
+USAGE:
+    wiki <query>
+
+OPTIONS:
+    -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
+    -h, --help         Print help information
+    -V, --version      Print version information
+
+EXAMPLES:
+    wiki rust
+    wiki 大语言模型
+    wiki プログラミング言語
+    wiki 인공지능
+    wiki -l zh rust              # query 'rust' on Chinese Wikipedia
+    wiki -l ja programming       # query 'programming' on Japanese Wikipedia
+    wiki -l zh-tw machine learning  # query in Traditional Chinese
+
+SUPPORTED LANGUAGES:
+    Auto-detected by script: English, Chinese (Simplified/Traditional),
+    Japanese, Korean, Arabic, Russian, Hindi, Thai, Hebrew, Greek,
+    Tamil, Bengali, Telugu, Turkish, Vietnamese
+");
 }
 
 fn detect_language(text: &str) -> (&'static str, Option<&'static str>) {
@@ -386,6 +392,8 @@ async fn fetch_json(client: &reqwest::Client, url: &str) -> Option<serde_json::V
     serde_json::from_str(&text).ok()
 }
 
+const HEX: &[u8; 16] = b"0123456789ABCDEF";
+
 fn urlencoding(s: &str) -> String {
     let mut buf = [0u8; 4];
     let mut result = String::with_capacity(s.len() * 2);
@@ -397,7 +405,8 @@ fn urlencoding(s: &str) -> String {
         } else {
             for &b in c.encode_utf8(&mut buf).as_bytes() {
                 result.push('%');
-                result.push_str(&format!("{b:02X}"));
+                result.push(HEX[(b >> 4) as usize] as char);
+                result.push(HEX[(b & 0x0F) as usize] as char);
             }
         }
     }
