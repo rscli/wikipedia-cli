@@ -66,9 +66,9 @@ wiki -l ja programming       # query on Japanese Wikipedia
 ### Language auto-detection
 
 ```bash
-wiki 人工智能               # → Chinese Wikipedia
-wiki プログラミング言語      # → Japanese Wikipedia
-wiki 인공지능               # → Korean Wikipedia
+wiki 人工智能                # → Chinese Wikipedia
+wiki プログラミング言語       # → Japanese Wikipedia
+wiki 인공지능                # → Korean Wikipedia
 wiki Искусственный интеллект # → Russian Wikipedia
 ```
 
