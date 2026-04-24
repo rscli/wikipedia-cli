@@ -1,3 +1,4 @@
+mod interactive;
 mod lang;
 mod output;
 mod wiki;
@@ -6,7 +7,9 @@ use std::env;
 use std::io::IsTerminal;
 use std::time::{Duration, Instant};
 
-use output::{print_article, print_footer, print_help, print_json_article, COLOR, PLAIN};
+use output::{
+    disambig_labels, print_article, print_footer, print_help, print_json_article, COLOR, PLAIN,
+};
 use wiki::{
     check_disambiguation_page, do_search, fetch_json, get_first_page, handle_disambiguation,
     urlencoding,
@@ -99,6 +102,8 @@ async fn main() {
         };
     }
 
+    let interactive = !json_mode && std::io::stdout().is_terminal();
+
     let t = if json_mode {
         &PLAIN
     } else if std::io::stdout().is_terminal() {
@@ -160,7 +165,28 @@ async fn main() {
         .is_some();
 
     if is_disambiguation {
-        handle_disambiguation(&client, lang, variant_param, title, start, t, json_mode).await;
+        if interactive {
+            let suggestions =
+                wiki::get_disambiguation_suggestions(&client, lang, variant_param, title).await;
+            if !suggestions.is_empty() {
+                let (_, ambig) = disambig_labels(lang);
+                if let Some(idx) = interactive::select(t, ambig, title, &suggestions) {
+                    let name = suggestions[idx]
+                        .split(',')
+                        .next()
+                        .unwrap_or(&suggestions[idx])
+                        .trim();
+                    if let Some((art_title, art_extract)) =
+                        wiki::fetch_article_by_title(&client, lang, variant_param, name).await
+                    {
+                        print_article(t, &art_title, &art_extract);
+                        print_footer(t, start, lang, &art_title);
+                    }
+                }
+            }
+        } else {
+            handle_disambiguation(&client, lang, variant_param, title, start, t, json_mode).await;
+        }
     } else {
         let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
 
@@ -177,7 +203,27 @@ async fn main() {
             print_footer(t, start, lang, title);
         }
 
-        if !json_mode {
+        if interactive {
+            let suggestions =
+                wiki::get_check_disambiguation(&client, lang, variant_param, &query).await;
+            if !suggestions.is_empty() {
+                let (also, _) = disambig_labels(lang);
+                if let Some(idx) = interactive::select(t, also, &query, &suggestions) {
+                    let name = suggestions[idx]
+                        .split(',')
+                        .next()
+                        .unwrap_or(&suggestions[idx])
+                        .trim();
+                    if let Some((art_title, art_extract)) =
+                        wiki::fetch_article_by_title(&client, lang, variant_param, name).await
+                    {
+                        println!();
+                        print_article(t, &art_title, &art_extract);
+                        print_footer(t, start, lang, &art_title);
+                    }
+                }
+            }
+        } else if !json_mode {
             check_disambiguation_page(&client, lang, variant_param, &query, t).await;
         }
     }

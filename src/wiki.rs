@@ -228,6 +228,89 @@ pub async fn handle_disambiguation(
     }
 }
 
+pub async fn get_disambiguation_suggestions(
+    client: &reqwest::Client,
+    lang: &str,
+    variant_param: &str,
+    title: &str,
+) -> Vec<String> {
+    let url = format!(
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext&titles={}&format=json&redirects=1{variant_param}",
+        urlencoding(title)
+    );
+    let Some(json) = fetch_json(client, &url).await else {
+        return Vec::new();
+    };
+    let Some(page) = get_first_page(&json) else {
+        return Vec::new();
+    };
+    let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
+    filter_disambiguation_lines(extract)
+        .into_iter()
+        .map(|s| s.to_string())
+        .collect()
+}
+
+pub async fn get_check_disambiguation(
+    client: &reqwest::Client,
+    lang: &str,
+    variant_param: &str,
+    query: &str,
+) -> Vec<String> {
+    let disambig_title = format!("{query} (disambiguation)");
+    let url = format!(
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts|pageprops&explaintext&titles={}&format=json&redirects=1{variant_param}",
+        urlencoding(&disambig_title)
+    );
+    let Some(json) = fetch_json(client, &url).await else {
+        return Vec::new();
+    };
+    let Some(page) = get_first_page(&json) else {
+        return Vec::new();
+    };
+    if page
+        .get("pageprops")
+        .and_then(|pp| pp.get("disambiguation"))
+        .is_none()
+    {
+        return Vec::new();
+    }
+    let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
+    filter_disambiguation_lines(extract)
+        .into_iter()
+        .map(|s| s.to_string())
+        .collect()
+}
+
+pub async fn fetch_article_by_title(
+    client: &reqwest::Client,
+    lang: &str,
+    variant_param: &str,
+    title: &str,
+) -> Option<(String, String)> {
+    let url = format!(
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles={}&format=json&redirects=1{variant_param}",
+        urlencoding(title)
+    );
+    let json = fetch_json(client, &url).await?;
+    let page = get_first_page(&json)?;
+    let t = page
+        .get("title")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let e = page
+        .get("extract")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    if e.is_empty() {
+        None
+    } else {
+        Some((t, e))
+    }
+}
+
 pub async fn fetch_json(client: &reqwest::Client, url: &str) -> Option<serde_json::Value> {
     let resp = match client.get(url).send().await {
         Ok(r) => r,
