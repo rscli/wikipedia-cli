@@ -1,38 +1,18 @@
-# wikipedia-cli
+![wikipedia-cli-image](https://github.com/user-attachments/assets/7f97fcba-6601-4467-b431-af0b5b6ad762)
 
-A command-line tool to query Wikipedia.
+# Wikipedia CLI
 
-```
-$ wiki apple
-[wiki] language: en (auto)
-
-┌─ Apple ───────
-
-An apple is the round, edible fruit of an apple tree (Malus spp.) ...
-
-└─ 179ms  · https://en.wikipedia.org/wiki/Apple
-```
-
-```
-$ wiki "apple inc"
-[wiki] language: en (auto)
-
-┌─ Apple Inc. ────────────
-
-Apple Inc. is an American multinational technology company ...
-
-└─ 191ms  · https://en.wikipedia.org/wiki/Apple_Inc.
-```
+A command-line tool to query wikipedia
 
 ## Installation
 
-via homebrew
+### via homebrew
 
 ```bash
 brew install rscli/tap/wiki
 ```
 
-via cargo
+### via cargo
 
 ```bash
 cargo install --git https://github.com/rscli/wikipedia-cli
@@ -44,7 +24,7 @@ cargo install --git https://github.com/rscli/wikipedia-cli
 wiki [OPTIONS] <query>
 ```
 
-### Options
+### options
 
 ```
 -j, --json         Output as JSON (for piping to jq, scripts, etc.)
@@ -53,7 +33,7 @@ wiki [OPTIONS] <query>
 -V, --version      Print version information
 ```
 
-### Examples
+### examples
 
 ```bash
 wiki rust                    # query article
@@ -63,13 +43,13 @@ wiki -l zh rust              # query on Chinese Wikipedia
 wiki -l ja programming       # query on Japanese Wikipedia
 ```
 
-### Language auto-detection
+### language auto-detection
 
 ```bash
-wiki 人工智能                # → Chinese Wikipedia
-wiki プログラミング言語       # → Japanese Wikipedia
-wiki 인공지능                # → Korean Wikipedia
-wiki Искусственный интеллект # → Russian Wikipedia
+wiki 人工智能                 # → Chinese Wikipedia
+wiki プログラミング言語         # → Japanese Wikipedia
+wiki 인공지능                   # → Korean Wikipedia
+wiki Искусственный интеллект  # → Russian Wikipedia
 ```
 
 ## License
