@@ -111,7 +111,7 @@ async fn main() {
     let start = Instant::now();
 
     let url = format!(
-        "https://{lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={}&gsrlimit=1&prop=extracts&exintro&explaintext&format=json&redirects=1{variant_param}",
+        "https://{lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={}&gsrlimit=1&prop=extracts|pageprops&exintro&explaintext&format=json&redirects=1{variant_param}",
         urlencoding(&query)
     );
 
@@ -137,6 +137,29 @@ async fn main() {
         .get("title")
         .and_then(|t| t.as_str())
         .unwrap_or("Unknown");
+    let is_disambig = page
+        .get("pageprops")
+        .and_then(|pp| pp.get("disambiguation"))
+        .is_some();
+
+    if is_disambig {
+        if let Some((art_title, art_extract)) =
+            wiki::resolve_disambiguation(&client, lang, variant_param, title).await
+        {
+            if json_mode {
+                print_json_article(lang, &art_title, &art_extract, start);
+            } else {
+                print_article(t, &art_title, &art_extract);
+                print_footer(t, start, lang, &art_title);
+            }
+        } else if json_mode {
+            println!("{{\"error\":\"No article found\"}}");
+        } else {
+            println!("No article found for '{query}'.");
+        }
+        return;
+    }
+
     let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
 
     if extract.is_empty() {

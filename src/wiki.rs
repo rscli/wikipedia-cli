@@ -25,6 +25,47 @@ pub fn get_first_page(json: &serde_json::Value) -> Option<&serde_json::Value> {
         .next()
 }
 
+pub async fn resolve_disambiguation(
+    client: &reqwest::Client,
+    lang: &str,
+    variant_param: &str,
+    title: &str,
+) -> Option<(String, String)> {
+    let url = format!(
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext&titles={}&format=json&redirects=1{variant_param}",
+        urlencoding(title)
+    );
+    let json = fetch_json(client, &url).await?;
+    let page = get_first_page(&json)?;
+    let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
+
+    let first = extract
+        .lines()
+        .map(|l| l.trim())
+        .filter(|l| {
+            !l.is_empty()
+                && !l.starts_with("==")
+                && !l.contains("may refer to")
+                && !l.contains("most commonly refers to")
+                && !l.contains("may also refer to")
+                && !l.starts_with("All pages with")
+        })
+        .find_map(|line| {
+            let name = line.split(',').next().unwrap_or(line).trim();
+            if name.len() >= 2 { Some(name) } else { None }
+        })?;
+
+    let url = format!(
+        "https://{lang}.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles={}&format=json&redirects=1{variant_param}",
+        urlencoding(first)
+    );
+    let json = fetch_json(client, &url).await?;
+    let page = get_first_page(&json)?;
+    let t = page.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    let e = page.get("extract").and_then(|v| v.as_str()).unwrap_or("").to_string();
+    if e.is_empty() { None } else { Some((t, e)) }
+}
+
 const HEX: &[u8; 16] = b"0123456789ABCDEF";
 
 pub fn urlencoding(s: &str) -> String {
