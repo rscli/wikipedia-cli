@@ -5,7 +5,9 @@ A command-line tool to query Wikipedia.
 ```
 $ wiki linux
 [wiki] language: en (auto)
+
 ┌─ Linux ────────
+
 Linux is a family of open-source Unix-like operating systems ...
 
 └─ 179ms  · https://en.wikipedia.org/wiki/Linux
@@ -14,7 +16,9 @@ Linux is a family of open-source Unix-like operating systems ...
 ```
 $ wiki "rust lang"
 [wiki] language: en (auto)
+
 ┌─ Rust (programming language) ─────────────────────────────
+
 Rust is a general-purpose programming language ...
 
 └─ 191ms  · https://en.wikipedia.org/wiki/Rust_(programming_language)
