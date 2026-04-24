@@ -29,6 +29,7 @@ async fn main() {
     let mut forced_lang: Option<&str> = None;
     let mut search_mode = false;
     let mut json_mode = false;
+    let mut auto_select: Option<usize> = None;
     let mut query_parts: Vec<&str> = Vec::new();
     let mut i = 0;
     while i < args.len() {
@@ -52,6 +53,15 @@ async fn main() {
             "-j" | "--json" => {
                 json_mode = true;
                 i += 1;
+            }
+            "--select" => {
+                if i + 1 < args.len() {
+                    auto_select = args[i + 1].parse().ok();
+                    i += 2;
+                } else {
+                    eprintln!("Error: --select requires a number (e.g. --select 0)");
+                    std::process::exit(1);
+                }
             }
             "-h" | "--help" => {
                 print_help();
@@ -102,7 +112,7 @@ async fn main() {
         };
     }
 
-    let interactive = !json_mode && std::io::stdout().is_terminal();
+    let interactive = !json_mode && (auto_select.is_some() || std::io::stdout().is_terminal());
 
     let t = if json_mode {
         &PLAIN
@@ -170,7 +180,12 @@ async fn main() {
                 wiki::get_disambiguation_suggestions(&client, lang, variant_param, title).await;
             if !suggestions.is_empty() {
                 let (_, ambig) = disambig_labels(lang);
-                if let Some(idx) = interactive::select(t, ambig, title, &suggestions) {
+                let chosen = match auto_select {
+                    Some(n) if n < suggestions.len() => Some(n),
+                    Some(_) => None,
+                    None => interactive::select(t, ambig, title, &suggestions),
+                };
+                if let Some(idx) = chosen {
                     let name = suggestions[idx]
                         .split(',')
                         .next()
@@ -208,7 +223,12 @@ async fn main() {
                 wiki::get_check_disambiguation(&client, lang, variant_param, &query).await;
             if !suggestions.is_empty() {
                 let (also, _) = disambig_labels(lang);
-                if let Some(idx) = interactive::select(t, also, &query, &suggestions) {
+                let chosen = match auto_select {
+                    Some(n) if n < suggestions.len() => Some(n),
+                    Some(_) => None,
+                    None => interactive::select(t, also, &query, &suggestions),
+                };
+                if let Some(idx) = chosen {
                     let name = suggestions[idx]
                         .split(',')
                         .next()

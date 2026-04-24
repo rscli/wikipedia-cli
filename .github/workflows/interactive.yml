@@ -27,32 +27,35 @@ jobs:
       - name: Build
         run: cargo build --release
 
-      - name: "rust (disambiguation)"
-        run: ./target/release/wiki rust
+      - name: "Disambiguate: mercury → select 1st (planet)"
+        run: ./target/release/wiki --select 0 mercury
 
-      - name: "mercury (disambiguation)"
-        run: ./target/release/wiki mercury
+      - name: "Disambiguate: mercury → select 2nd (element)"
+        run: ./target/release/wiki --select 1 mercury
 
-      - name: "python (disambiguation)"
-        run: ./target/release/wiki python
+      - name: "Disambiguate: mercury → select 3rd (mythology)"
+        run: ./target/release/wiki --select 2 mercury
 
-      - name: "apple (disambiguation)"
-        run: ./target/release/wiki apple
+      - name: "Disambiguate: python → select 1st"
+        run: ./target/release/wiki --select 0 python
 
-      - name: "java (disambiguation)"
-        run: ./target/release/wiki java
+      - name: "Disambiguate: python → select 2nd"
+        run: ./target/release/wiki --select 1 python
 
-      - name: "mars (disambiguation)"
-        run: ./target/release/wiki mars
+      - name: "Disambiguate: apple → select 1st"
+        run: ./target/release/wiki --select 0 apple
 
-      - name: "cargo (disambiguation)"
-        run: ./target/release/wiki cargo
+      - name: "Disambiguate: java → select 1st"
+        run: ./target/release/wiki --select 0 java
 
-      - name: "tiktok"
-        run: ./target/release/wiki tiktok
+      - name: "Disambiguate: java → select 2nd"
+        run: ./target/release/wiki --select 1 java
 
-      - name: "cli"
-        run: ./target/release/wiki cli
+      - name: "Disambiguate: mars → select 1st"
+        run: ./target/release/wiki --select 0 mars
+
+      - name: "Non-interactive fallback (piped)"
+        run: ./target/release/wiki rust | head -20
 
       - name: "Specific: Rust (programming language)"
         run: ./target/release/wiki "Rust (programming language)"
