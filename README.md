@@ -3,13 +3,21 @@
 A command-line tool to query Wikipedia.
 
 ```
-$ wiki anthropic
-
+$ wiki rust
 [wiki] language: en (auto)
-┌─ Anthropic ───────────
-Anthropic PBC is an American artificial intelligence (AI) company headquartered in San Francisco. It has developed a range of large language models (LLMs) named Claude and focuses on AI safety.
-Anthropic was founded in 2021 by former members of OpenAI, including siblings Daniela Amodei and Dario Amodei, who are president and CEO, respectively. The company is privately held and, as of February 2026, had an estimated value of $380 billion. 
-└─ 179ms  · https://en.wikipedia.org/wiki/Anthropic
+┌─ Rust ──────
+Rust is an iron oxide ...
+
+└─ 179ms  · https://en.wikipedia.org/wiki/Rust
+```
+
+```
+$ wiki "rust lang"
+[wiki] language: en (auto)
+┌─ Rust (programming language) ─────────────────────────────
+Rust is a general-purpose programming language ...
+
+└─ 191ms  · https://en.wikipedia.org/wiki/Rust_(programming_language)
 ```
 
 ## Installation
@@ -32,24 +40,33 @@ cargo install --git https://github.com/rscli/wikipedia-cli
 wiki [OPTIONS] <query>
 ```
 
-options
+### Options
 
 ```
--g, --get          Get article summary (default)
--s, --search       Search mode: list top results instead of fetching article
 -j, --json         Output as JSON (for piping to jq, scripts, etc.)
 -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
 -h, --help         Print help information
 -V, --version      Print version information
 ```
 
+### Examples
 
-## Features
+```bash
+wiki rust                    # query article
+wiki "rust lang"             # multi-word query
+wiki --json rust             # article as JSON
+wiki -l zh rust              # query on Chinese Wikipedia
+wiki -l ja programming       # query on Japanese Wikipedia
+```
 
-- ANSI colored output with hacker-style box drawing (auto-disabled when piped)
-- Single API call for article fetch (search + extract merged via generator API)
-- Zero-dependency language detection via Unicode script analysis
-- Optimized release binary (LTO, strip, panic=abort, opt-level=z)
+### Language auto-detection
+
+```bash
+wiki 人工智能               # → Chinese Wikipedia
+wiki プログラミング言語      # → Japanese Wikipedia
+wiki 인공지능               # → Korean Wikipedia
+wiki Искусственный интеллект # → Russian Wikipedia
+```
 
 ## License
 

@@ -34,9 +34,6 @@ async fn main() {
                     std::process::exit(1);
                 }
             }
-            "-g" | "--get" => {
-                i += 1;
-            }
             "-j" | "--json" => {
                 json_mode = true;
                 i += 1;
