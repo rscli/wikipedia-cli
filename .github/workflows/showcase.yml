@@ -39,6 +39,12 @@ jobs:
       - name: "wiki cli"
         run: ./target/release/wiki cli
 
+      - name: "wiki apple"
+        run: ./target/release/wiki apple
+
+      - name: "wiki apple inc"
+        run: ./target/release/wiki "apple inc"
+
       - name: "wiki --json rust"
         run: ./target/release/wiki --json rust
 
