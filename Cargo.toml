@@ -1,6 +1,6 @@
 [package]
 name = "wiki"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Query Wikipedia from the command line with automatic language detection"
 repository = "https://github.com/rscli/wikipedia-cli"
