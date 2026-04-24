@@ -3,12 +3,12 @@
 A command-line tool to query Wikipedia.
 
 ```
-$ wiki rust
+$ wiki linux
 [wiki] language: en (auto)
-┌─ Rust ──────
-Rust is an iron oxide ...
+┌─ Linux ────────
+Linux is a family of open-source Unix-like operating systems ...
 
-└─ 179ms  · https://en.wikipedia.org/wiki/Rust
+└─ 179ms  · https://en.wikipedia.org/wiki/Linux
 ```
 
 ```
