@@ -3,25 +3,25 @@
 A command-line tool to query Wikipedia.
 
 ```
-$ wiki linux
+$ wiki apple
 [wiki] language: en (auto)
 
-┌─ Linux ────────
+┌─ Apple ───────
 
-Linux is a family of open-source Unix-like operating systems ...
+An apple is the round, edible fruit of an apple tree (Malus spp.) ...
 
-└─ 179ms  · https://en.wikipedia.org/wiki/Linux
+└─ 179ms  · https://en.wikipedia.org/wiki/Apple
 ```
 
 ```
-$ wiki "rust lang"
+$ wiki "apple inc"
 [wiki] language: en (auto)
 
-┌─ Rust (programming language) ─────────────────────────────
+┌─ Apple Inc. ────────────
 
-Rust is a general-purpose programming language ...
+Apple Inc. is an American multinational technology company ...
 
-└─ 191ms  · https://en.wikipedia.org/wiki/Rust_(programming_language)
+└─ 191ms  · https://en.wikipedia.org/wiki/Apple_Inc.
 ```
 
 ## Installation
