@@ -1,4 +1,4 @@
-name: Search
+name: Showcase
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [master, main]
 
 jobs:
-  search:
+  showcase:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +27,7 @@ jobs:
       - name: Build
         run: cargo build --release
 
+      # Search mode
       - name: "--search rust"
         run: ./target/release/wiki --search rust
 
@@ -36,17 +37,22 @@ jobs:
       - name: "--search 人工智能"
         run: ./target/release/wiki --search 人工智能
 
-      - name: "--search プログラミング (Japanese)"
+      - name: "--search プログラミング"
         run: ./target/release/wiki --search プログラミング
 
-      - name: "-s -l zh rust"
-        run: ./target/release/wiki -s -l zh rust
+      # JSON mode
+      - name: "--json rust"
+        run: ./target/release/wiki --json rust
 
-      - name: "-s -l ja programming"
-        run: ./target/release/wiki -s -l ja programming
+      - name: "-s -j rust (search + json)"
+        run: ./target/release/wiki -s -j rust
 
-      - name: "--search mercury (disambiguation)"
-        run: ./target/release/wiki --search mercury
+      - name: "-j -l zh rust (json + lang)"
+        run: ./target/release/wiki -j -l zh rust
 
-      - name: "--search 인공지능 (Korean)"
-        run: ./target/release/wiki --search 인공지능
+      # Flags
+      - name: "-h (help)"
+        run: ./target/release/wiki -h
+
+      - name: "-V (version)"
+        run: ./target/release/wiki -V
