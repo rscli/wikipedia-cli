@@ -1,19 +1,12 @@
-mod interactive;
 mod lang;
 mod output;
 mod wiki;
 
 use std::env;
-use std::io::IsTerminal;
 use std::time::{Duration, Instant};
 
-use output::{
-    disambig_labels, print_article, print_footer, print_help, print_json_article, COLOR, PLAIN,
-};
-use wiki::{
-    check_disambiguation_page, do_search, fetch_json, get_first_page, handle_disambiguation,
-    urlencoding,
-};
+use output::{print_article, print_footer, print_help, print_json_article, COLOR, PLAIN};
+use wiki::{fetch_json, get_first_page, urlencoding};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -27,7 +20,6 @@ async fn main() {
     }
 
     let mut forced_lang: Option<&str> = None;
-    let mut search_mode = false;
     let mut json_mode = false;
     let mut query_parts: Vec<&str> = Vec::new();
     let mut i = 0;
@@ -43,10 +35,6 @@ async fn main() {
                 }
             }
             "-g" | "--get" => {
-                i += 1;
-            }
-            "-s" | "--search" => {
-                search_mode = true;
                 i += 1;
             }
             "-j" | "--json" => {
@@ -102,11 +90,9 @@ async fn main() {
         };
     }
 
-    let interactive = !json_mode && std::io::stdout().is_terminal();
-
     let t = if json_mode {
         &PLAIN
-    } else if std::io::stdout().is_terminal() {
+    } else if std::io::IsTerminal::is_terminal(&std::io::stdout()) {
         &COLOR
     } else {
         &PLAIN
@@ -127,13 +113,8 @@ async fn main() {
 
     let start = Instant::now();
 
-    if search_mode {
-        do_search(&client, lang, variant_param, &query, start, t, json_mode).await;
-        return;
-    }
-
     let url = format!(
-        "https://{lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={}&gsrlimit=1&prop=extracts|pageprops&exintro&explaintext&format=json&redirects=1{variant_param}",
+        "https://{lang}.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch={}&gsrlimit=1&prop=extracts&exintro&explaintext&format=json&redirects=1{variant_param}",
         urlencoding(&query)
     );
 
@@ -159,72 +140,18 @@ async fn main() {
         .get("title")
         .and_then(|t| t.as_str())
         .unwrap_or("Unknown");
-    let is_disambiguation = page
-        .get("pageprops")
-        .and_then(|pp| pp.get("disambiguation"))
-        .is_some();
+    let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
 
-    if is_disambiguation {
-        if interactive {
-            let suggestions =
-                wiki::get_disambiguation_suggestions(&client, lang, variant_param, title).await;
-            if !suggestions.is_empty() {
-                let (_, ambig) = disambig_labels(lang);
-                if let Some(idx) = interactive::select(t, ambig, title, &suggestions) {
-                    let name = suggestions[idx]
-                        .split(',')
-                        .next()
-                        .unwrap_or(&suggestions[idx])
-                        .trim();
-                    if let Some((art_title, art_extract)) =
-                        wiki::fetch_article_by_title(&client, lang, variant_param, name).await
-                    {
-                        print_article(t, &art_title, &art_extract);
-                        print_footer(t, start, lang, &art_title);
-                    }
-                }
-            }
+    if extract.is_empty() {
+        if json_mode {
+            println!("{{\"error\":\"No article found\"}}");
         } else {
-            handle_disambiguation(&client, lang, variant_param, title, start, t, json_mode).await;
+            println!("No article found for '{query}'.");
         }
+    } else if json_mode {
+        print_json_article(lang, title, extract, start);
     } else {
-        let extract = page.get("extract").and_then(|e| e.as_str()).unwrap_or("");
-
-        if extract.is_empty() {
-            if json_mode {
-                println!("{{\"error\":\"No article found\"}}");
-            } else {
-                println!("No article found for '{query}'.");
-            }
-        } else if json_mode {
-            print_json_article(lang, title, extract, start);
-        } else {
-            print_article(t, title, extract);
-            print_footer(t, start, lang, title);
-        }
-
-        if interactive {
-            let suggestions =
-                wiki::get_check_disambiguation(&client, lang, variant_param, &query).await;
-            if !suggestions.is_empty() {
-                let (also, _) = disambig_labels(lang);
-                if let Some(idx) = interactive::select(t, also, &query, &suggestions) {
-                    let name = suggestions[idx]
-                        .split(',')
-                        .next()
-                        .unwrap_or(&suggestions[idx])
-                        .trim();
-                    if let Some((art_title, art_extract)) =
-                        wiki::fetch_article_by_title(&client, lang, variant_param, name).await
-                    {
-                        println!();
-                        print_article(t, &art_title, &art_extract);
-                        print_footer(t, start, lang, &art_title);
-                    }
-                }
-            }
-        } else if !json_mode {
-            check_disambiguation_page(&client, lang, variant_param, &query, t).await;
-        }
+        print_article(t, title, extract);
+        print_footer(t, start, lang, title);
     }
 }

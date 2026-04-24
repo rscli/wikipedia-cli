@@ -27,32 +27,23 @@ jobs:
       - name: Build
         run: cargo build --release
 
-      # Search mode
-      - name: "--search rust"
-        run: ./target/release/wiki --search rust
+      - name: "wiki rust"
+        run: ./target/release/wiki rust
 
-      - name: "-s programming language"
-        run: ./target/release/wiki -s "programming language"
+      - name: "wiki \"rust lang\""
+        run: ./target/release/wiki "rust lang"
 
-      - name: "--search 人工智能"
-        run: ./target/release/wiki --search 人工智能
+      - name: "wiki Linux"
+        run: ./target/release/wiki Linux
 
-      - name: "--search プログラミング"
-        run: ./target/release/wiki --search プログラミング
-
-      # JSON mode
-      - name: "--json rust"
+      - name: "wiki --json rust"
         run: ./target/release/wiki --json rust
 
-      - name: "-s -j rust (search + json)"
-        run: ./target/release/wiki -s -j rust
-
-      - name: "-j -l zh rust (json + lang)"
+      - name: "wiki -j -l zh rust"
         run: ./target/release/wiki -j -l zh rust
 
-      # Flags
-      - name: "-h (help)"
+      - name: "wiki -h"
         run: ./target/release/wiki -h
 
-      - name: "-V (version)"
+      - name: "wiki -V"
         run: ./target/release/wiki -V
