@@ -166,7 +166,6 @@ OPTIONS:
     -s, --search       Search mode: list top results instead of fetching article
     -j, --json         Output as JSON (for piping to jq, scripts, etc.)
     -l, --lang <code>  Specify language (e.g. en, zh, zh-cn, zh-tw, ja, ko, ru, ...)
-    --select <N>       Auto-select Nth disambiguation option (0-indexed)
     -h, --help         Print help information
     -V, --version      Print version information
 
