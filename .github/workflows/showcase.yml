@@ -36,6 +36,9 @@ jobs:
       - name: "wiki Linux"
         run: ./target/release/wiki Linux
 
+      - name: "wiki cli"
+        run: ./target/release/wiki cli
+
       - name: "wiki --json rust"
         run: ./target/release/wiki --json rust
 
