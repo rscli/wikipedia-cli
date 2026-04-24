@@ -3,9 +3,9 @@ name = "wiki"
 version = "0.1.0"
 edition = "2021"
 description = "Query Wikipedia from the command line with automatic language detection"
-repository = "https://github.com/rustq/wikipedia-cli"
+repository = "https://github.com/rscli/wikipedia-cli"
 license = "MIT"
-keywords = ["wikipedia", "cli", "search"]
+keywords = ["wikipedia", "cli", "terminal"]
 categories = ["command-line-utilities"]
 
 [[bin]]
