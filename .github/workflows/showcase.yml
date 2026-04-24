@@ -45,6 +45,9 @@ jobs:
       - name: "wiki apple inc"
         run: ./target/release/wiki "apple inc"
 
+      - name: "wiki ai"
+        run: ./target/release/wiki ai
+
       - name: "wiki --json rust"
         run: ./target/release/wiki --json rust
 
