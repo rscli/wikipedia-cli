@@ -52,7 +52,11 @@ pub async fn resolve_disambiguation(
         })
         .find_map(|line| {
             let name = line.split(',').next().unwrap_or(line).trim();
-            if name.len() >= 2 { Some(name) } else { None }
+            if name.len() >= 2 {
+                Some(name)
+            } else {
+                None
+            }
         })?;
 
     let url = format!(
@@ -61,9 +65,21 @@ pub async fn resolve_disambiguation(
     );
     let json = fetch_json(client, &url).await?;
     let page = get_first_page(&json)?;
-    let t = page.get("title").and_then(|v| v.as_str()).unwrap_or("").to_string();
-    let e = page.get("extract").and_then(|v| v.as_str()).unwrap_or("").to_string();
-    if e.is_empty() { None } else { Some((t, e)) }
+    let t = page
+        .get("title")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let e = page
+        .get("extract")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    if e.is_empty() {
+        None
+    } else {
+        Some((t, e))
+    }
 }
 
 const HEX: &[u8; 16] = b"0123456789ABCDEF";
