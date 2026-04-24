@@ -44,6 +44,7 @@ pub fn display_width(s: &str) -> usize {
 
 pub fn print_article(t: &Theme, title: &str, extract: &str) {
     let bar = "─".repeat(display_width(title) + 2);
+    println!();
     println!("{}┌─ {} {}{}", t.title, title, bar, t.reset);
     println!();
     println!("{extract}");
