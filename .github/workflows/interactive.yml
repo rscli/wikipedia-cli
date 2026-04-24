@@ -1,4 +1,4 @@
-name: Disambiguation
+name: Interactive
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [master, main]
 
 jobs:
-  disambiguation:
+  interactive:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,20 +27,32 @@ jobs:
       - name: Build
         run: cargo build --release
 
-      - name: "mercury"
+      - name: "rust (disambiguation)"
+        run: ./target/release/wiki rust
+
+      - name: "mercury (disambiguation)"
         run: ./target/release/wiki mercury
 
-      - name: "python"
+      - name: "python (disambiguation)"
         run: ./target/release/wiki python
 
-      - name: "apple"
+      - name: "apple (disambiguation)"
         run: ./target/release/wiki apple
 
-      - name: "java"
+      - name: "java (disambiguation)"
         run: ./target/release/wiki java
 
-      - name: "mars"
+      - name: "mars (disambiguation)"
         run: ./target/release/wiki mars
 
-      - name: "Specific → Rust (programming language)"
+      - name: "cargo (disambiguation)"
+        run: ./target/release/wiki cargo
+
+      - name: "tiktok"
+        run: ./target/release/wiki tiktok
+
+      - name: "cli"
+        run: ./target/release/wiki cli
+
+      - name: "Specific: Rust (programming language)"
         run: ./target/release/wiki "Rust (programming language)"
