@@ -383,3 +383,108 @@ pub fn urlencoding(s: &str) -> String {
     }
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn urlencoding_ascii() {
+        assert_eq!(urlencoding("hello"), "hello");
+    }
+
+    #[test]
+    fn urlencoding_spaces() {
+        assert_eq!(urlencoding("hello world"), "hello+world");
+    }
+
+    #[test]
+    fn urlencoding_special_chars() {
+        assert_eq!(urlencoding("a&b=c"), "a%26b%3Dc");
+    }
+
+    #[test]
+    fn urlencoding_unreserved() {
+        assert_eq!(urlencoding("a-b_c.d~e"), "a-b_c.d~e");
+    }
+
+    #[test]
+    fn urlencoding_unicode() {
+        let encoded = urlencoding("日本語");
+        assert!(encoded.contains('%'));
+        assert!(!encoded.contains(' '));
+    }
+
+    #[test]
+    fn strip_html_simple() {
+        assert_eq!(strip_html_tags("<b>bold</b>"), "bold");
+    }
+
+    #[test]
+    fn strip_html_nested() {
+        assert_eq!(
+            strip_html_tags("<span class=\"x\"><b>text</b></span>"),
+            "text"
+        );
+    }
+
+    #[test]
+    fn strip_html_no_tags() {
+        assert_eq!(strip_html_tags("plain text"), "plain text");
+    }
+
+    #[test]
+    fn strip_html_empty() {
+        assert_eq!(strip_html_tags(""), "");
+    }
+
+    #[test]
+    fn filter_disambig_skips_headers() {
+        let text = "== Section ==\nActual line\n";
+        let result = filter_disambiguation_lines(text);
+        assert_eq!(result, vec!["Actual line"]);
+    }
+
+    #[test]
+    fn filter_disambig_skips_meta() {
+        let text = "Foo may refer to:\nBar, a thing\nBaz, another thing\n";
+        let result = filter_disambiguation_lines(text);
+        assert_eq!(result, vec!["Bar, a thing", "Baz, another thing"]);
+    }
+
+    #[test]
+    fn filter_disambig_skips_empty_lines() {
+        let text = "\n\nHello\n\n";
+        let result = filter_disambiguation_lines(text);
+        assert_eq!(result, vec!["Hello"]);
+    }
+
+    #[test]
+    fn filter_disambig_skips_all_pages_with() {
+        let text = "All pages with title\nReal entry\n";
+        let result = filter_disambiguation_lines(text);
+        assert_eq!(result, vec!["Real entry"]);
+    }
+
+    #[test]
+    fn get_first_page_valid() {
+        let json: serde_json::Value = serde_json::json!({
+            "query": {
+                "pages": {
+                    "12345": {
+                        "title": "Test",
+                        "extract": "Content"
+                    }
+                }
+            }
+        });
+        let page = get_first_page(&json).unwrap();
+        assert_eq!(page["title"], "Test");
+    }
+
+    #[test]
+    fn get_first_page_missing() {
+        let json: serde_json::Value = serde_json::json!({"batchcomplete": ""});
+        assert!(get_first_page(&json).is_none());
+    }
+}

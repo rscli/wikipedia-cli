@@ -185,3 +185,54 @@ SUPPORTED LANGUAGES:
 "
     );
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn display_width_ascii() {
+        assert_eq!(display_width("hello"), 5);
+    }
+
+    #[test]
+    fn display_width_cjk() {
+        assert_eq!(display_width("日本"), 4);
+    }
+
+    #[test]
+    fn display_width_mixed() {
+        assert_eq!(display_width("hello世界"), 9);
+    }
+
+    #[test]
+    fn display_width_empty() {
+        assert_eq!(display_width(""), 0);
+    }
+
+    #[test]
+    fn disambig_labels_english() {
+        let (also, ambig) = disambig_labels("en");
+        assert!(also.contains("refer to"));
+        assert!(ambig.contains("ambiguous"));
+    }
+
+    #[test]
+    fn disambig_labels_chinese() {
+        let (also, ambig) = disambig_labels("zh");
+        assert!(also.contains("也"));
+        assert!(ambig.contains("消歧义"));
+    }
+
+    #[test]
+    fn disambig_labels_japanese() {
+        let (_, ambig) = disambig_labels("ja");
+        assert!(ambig.contains("曖昧"));
+    }
+
+    #[test]
+    fn disambig_labels_unknown_falls_back_to_english() {
+        let (also, _) = disambig_labels("xx");
+        assert!(also.contains("refer to"));
+    }
+}

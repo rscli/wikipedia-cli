@@ -32,6 +32,9 @@ jobs:
       - name: Clippy
         run: cargo clippy -- -D warnings
 
+      - name: Tests
+        run: cargo test
+
   build:
     needs: lint
     strategy:

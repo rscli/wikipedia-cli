@@ -198,3 +198,83 @@ fn is_traditional_indicator(c: char) -> bool {
             | '訊'
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn english_text() {
+        assert_eq!(detect_language("rust"), ("en", None));
+        assert_eq!(detect_language("hello world"), ("en", None));
+    }
+
+    #[test]
+    fn japanese_hiragana() {
+        assert_eq!(detect_language("こんにちは"), ("ja", None));
+    }
+
+    #[test]
+    fn japanese_katakana() {
+        assert_eq!(detect_language("プログラミング"), ("ja", None));
+    }
+
+    #[test]
+    fn korean() {
+        assert_eq!(detect_language("한국어"), ("ko", None));
+    }
+
+    #[test]
+    fn simplified_chinese() {
+        let (lang, variant) = detect_language("这个国家");
+        assert_eq!(lang, "zh");
+        assert_eq!(variant, Some("zh-cn"));
+    }
+
+    #[test]
+    fn traditional_chinese() {
+        let (lang, variant) = detect_language("這個國家");
+        assert_eq!(lang, "zh");
+        assert_eq!(variant, Some("zh-tw"));
+    }
+
+    #[test]
+    fn arabic() {
+        assert_eq!(detect_language("مرحبا").0, "ar");
+    }
+
+    #[test]
+    fn russian() {
+        assert_eq!(detect_language("программирование").0, "ru");
+    }
+
+    #[test]
+    fn hindi() {
+        assert_eq!(detect_language("नमस्ते").0, "hi");
+    }
+
+    #[test]
+    fn thai() {
+        assert_eq!(detect_language("สวัสดี").0, "th");
+    }
+
+    #[test]
+    fn hebrew() {
+        assert_eq!(detect_language("שלום").0, "he");
+    }
+
+    #[test]
+    fn greek() {
+        assert_eq!(detect_language("ελληνικά").0, "el");
+    }
+
+    #[test]
+    fn mixed_english_stays_english() {
+        assert_eq!(detect_language("Rust programming language"), ("en", None));
+    }
+
+    #[test]
+    fn empty_string() {
+        assert_eq!(detect_language(""), ("en", None));
+    }
+}
